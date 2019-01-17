@@ -2,6 +2,7 @@ from __future__ import print_function
 import itertools
 import numpy
 import copy
+'''
 options = ['active','standby','being repaired']
 unitNum = [2,3,2,3]
 failureModes = [['rotor','bearing','Gearbox','LubeOil','motorBearing','motor'],#MAC
@@ -9,6 +10,7 @@ failureModes = [['rotor','bearing','Gearbox','LubeOil','motorBearing','motor'],#
 ['rotor','bearing','Gearbox','LubeOil','motorBearing','motor'],#BAC
 ['generalFailure']]#LO2 PUMP
 #general basic tool (public)
+'''
 def printSquareMatrix(mat):
     output = str()      
     for i in range(len(mat)):
@@ -60,7 +62,7 @@ def listMatrix(mat):
     return output
 
 #matrix value assign (public)
-def transit(k, stateFrom, stateTo, parameters):#locate failure mode
+def transit(k, stateFrom, stateTo, parameters, options, failureModes):#locate failure mode
     def isFailure():#The transition is caused by a failure
         if not (stateFrom[:origAct] == stateTo[:origAct] 
                 and stateFrom[newAct+1:] == stateTo[newAct+1:]
@@ -150,7 +152,7 @@ def transit(k, stateFrom, stateTo, parameters):#locate failure mode
                 return value
             else:
                 return None
-def transit2(k, stateFrom, stateTo, parameters):
+def transit2(k, stateFrom, stateTo, parameters, options, failureModes):
     def isFailure():#The transition is caused by a failure
         if not (stateFrom[:origAct] == stateTo[:origAct] 
                 and stateFrom[newAct+1:] == stateTo[newAct+1:]
@@ -259,7 +261,7 @@ def isValidState2(state):
     #    return False    
 
     return True
-def generateTMatrix(k, design, parameter):#for selected design of stage k
+def generateTMatrix(k, design, parameter, options, failureModes):#for selected design of stage k
     states = list()
     statesToEliminate = [state for state in 
     list(itertools.product(failureModes[0], repeat = 2))+[('active','motorBearing'),('active','Gearbox'),
@@ -332,18 +334,18 @@ def generateTMatrix(k, design, parameter):#for selected design of stage k
             stateFrom = states[i]['name']
             for j in range(len(states)):
                 stateTo = states[j]['name']
-                value = transit2(k,stateFrom, stateTo, selectParameters)
+                value = transit2(k,stateFrom, stateTo, selectParameters, options, failureModes)
                 matrix[i][j] = 0 if value is None else value
     else:
         for i in range(len(states)):
             stateFrom = states[i]['name']
             for j in range(len(states)):
                 stateTo = states[j]['name']
-                value = transit(k,stateFrom, stateTo, selectParameters)
+                value = transit(k,stateFrom, stateTo, selectParameters, options, failureModes)
                 matrix[i][j] = 0 if value is None else value
     return (matrix,states)
 
-def generatePseudoTMatrix(k, level, parameter):#for stage k, total number of units = level
+def generatePseudoTMatrix(k, level, parameter, options, failureModes):#for stage k, total number of units = level
     numOfUnit = unitNum[k]#total number of potential units
     alters = itertools.combinations(range(numOfUnit), level)#all combinations of this level
     matrixList = list()
@@ -353,7 +355,7 @@ def generatePseudoTMatrix(k, level, parameter):#for stage k, total number of uni
         for element in alter:
             design[element] = 1
         print(design)
-        matrix, states = generateTMatrix(k,design,parameter)
+        matrix, states = generateTMatrix(k,design,parameter, options, failureModes)
         for stage in states:
             print(stage)
         print('---------------------------------------------------')
@@ -380,19 +382,6 @@ def calTmatrices(parameters):#include all stage
         tMatrixDimList.append(len(tMatrixList[k]))
     return (tMatrixList,tMatrixDimList)
 
-
-def readDesigns(fileDesign):
-    designs = [[]*1 for i in range(len(unitNum))]
-    f = open(fileDesign,'r')
-    designString = f.read()[:-1]
-    f.close()
-    designList = designString.split('\n')
-    for i in range(len(designList)):
-        designList[i] = designList[i].replace('"', '').split(',')
-        stageNum = int(designList[i][0])
-        y = int(float(designList[i][2]))
-        designs[stageNum-1].append(y)
-    return designs
 
 
 ###########################################################################################
@@ -431,87 +420,3 @@ def convertResultToParameter(file,filePrime,var):
     f.write(output)
     f.close()
 
-
-
-'''
-def calQMatrix(tMatrixList,tMatrixDimList):
-    preQMatrix = list()
-    for k in range(len(tMatrixList)):
-        (dimG,dimL) = calEyeDim(k, tMatrixDimList)
-        preQMatrix.append(numpy.kron(numpy.identity(dimG),numpy.kron(tMatrixList[k], numpy.identity(dimL))))#matrix is too large
-    for k in range(1,len(preQMatrix)):
-        for row in range(len(preQMatrix[0])):
-            for col in range(len(preQMatrix[0][0])):
-                preQMatrix[0][row][col] += preQMatrix[k][row][col]
-    qmatrix = copy.deepcopy(preQMatrix[0])
-    for row in range(len(qmatrix)):
-        for col in range(len(qmatrix[row])):
-            qmatrix[row][col] = round(qmatrix[row][col],5)
-        qmatrix[row][row] = -sum(qmatrix[row])
-    return qmatrix
-'''
-
-
-
-
-'''
-def locateTMatrix(design, options, parameter):#put the Tmatrix to its designated place in the pseudoTmatrix 
-    originalMatrix, originalStates = generateTMatrix(design, options, parameter)
-    numOfUnit = len(parameter['lambdas'])
-    alters = list()    
-    for level in range(1,numOfUnit+1):
-        alters += list(itertools.combinations(range(numOfUnit), level))
-    designs = list()
-    statesBefore = list()
-    for alter in alters:
-        currDesign = [0] * numOfUnit
-        for element in alter:
-            currDesign[element] = 1
-        if currDesign != design:#currDesign must have fewer or same number of units as design 
-            for state in itertools.product(options, repeat = sum(currDesign)):
-                if isValidState(state):
-                    statesBefore.append(state)
-        else:#once the iteration reaches the design, stop
-            break
-    states = [None]*len(statesBefore)+originalStates
-    print('original')
-    print(originalMatrix)
-    for i in range(len(originalMatrix)):
-        originalMatrix[i] = [0]*len(statesBefore) + originalMatrix[i]
-    matrix = [[0]*(len(statesBefore)+len(originalStates)) for i in range(len(statesBefore))] + originalMatrix
-    return (matrix, states)    
-'''
-
-
-'''def generatePseudoTMatrix(level, options, parameters):#include all combinations in one stage with same number of units
-    #generate state products for the design of certain number of units
-    print(parameters)
-    states = list()
-    for state in itertools.product(options, repeat = level):
-        if isValidState(state):
-            states.append(state)
-    #apply the state products for all combinations of this number of units
-    numOfUnit = len(parameters['lambdas'])#total number of potential units
-    alters = itertools.combinations(range(numOfUnit), level)#all combinations of this level (number of units in the design)
-    matrixList = list()#prepare a matrix array
-    for alter in alters:
-        print(alter)
-        #generate parameters for different combinations
-        selectParameters = dict()
-        for index in parameters:
-            selectParameters[index] = []
-            for i in alter:
-                selectParameters[index].append(parameters[index][i])
-            selectParameters[index] = tuple(selectParameters[index])
-
-        matrix = [[0]*len(states) for i in range(len(states))]
-        for i in range(len(states)):
-            stateFrom = states[i]
-            for j in range(len(states)):
-                stateTo = states[j]
-                value = transit(stateFrom, stateTo, selectParameters)
-                matrix[i][j] = 0 if value is None else value
-        matrixList.append(matrix)
-    #print(matrixList)
-    return putogether(matrixList)
-'''

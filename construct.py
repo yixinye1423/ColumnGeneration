@@ -87,8 +87,8 @@ def PP(m):
 	m.inst = Param(m.H)
 	m.Q = Param(m.S*m.S)
 	m.M = Param(default=1000)#the big M
-	m.u = Param()
-	m.v = Param()
+	m.u = Param(default=1000)
+	m.v = Param(default=1000)
 
 	m.z = Var(m.H, domain=Binary)
 	m.c = Var(domain=NonNegativeReals)
@@ -112,5 +112,8 @@ def PP(m):
 	def prob_3(m,s):
 		return sum(m.pi[s]*m.Q[s,t] for t in m.S) >= m.M*(sum(m.z[h] for (h,s) in m.HS)-1)
 	m.prob3 = Constraint(rule=prob_3)
+	def subOBJ(m):
+		return 
+	m.obj = Objective(rule=subOBJ)
 
 
