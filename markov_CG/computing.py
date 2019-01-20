@@ -29,6 +29,7 @@ opt.solve(instance,tee = False).write()
 
 for kh in instance.KH:
 	print(kh, instance.z[kh].value)
+'''
 print('-----------------------------------------------------')
 print(max(instance.z_bar[h_bar].value for h_bar in instance.H_bar))
 print('-----------------------------------------------------')
@@ -40,6 +41,7 @@ print('-----------------------------------------------------')
 print(sum(instance.rfinv_LO2[n,h_bar].value for (n,h_bar) in instance.N*instance.H_bar))
 #instance.dual.display()
 #instance.pprint()
+'''
 '''
 for index in instance.logic4:
 	if instance.dual[instance.logic4[index]] != 0:
