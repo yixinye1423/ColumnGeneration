@@ -176,11 +176,12 @@ for k in range(len(stageData)):
 
 hs = [[h for h in range(int(len(stageData[k])/3*2))] for k in range(len(stageData))]#reduced
 
-hs = [list(range(len(stageData[k]))) for k in range(len(stageData))]#full
-
 hs = [[0, len(stageData[k])-1] for k in range(len(stageData))]#base
 
 hs = [[0, len(stageData[k])//2 ,len(stageData[k])-1] for k in range(len(stageData))]#selected
+
+hs = [list(range(len(stageData[k]))) for k in range(len(stageData))]#full
+
 print(hs)
 list2d = [[(k,h) for h in hs[k]] for k in range(len(hs))]
 
@@ -214,6 +215,6 @@ mstDat['finv_LO2'] = fInv_LO2
 mstDat['finv_LN2'] = fInv_LN2
 
 
-with open('data_selected.p', 'wb') as fp:
-    pickle.dump(mstDat, fp, protocol=pickle.HIGHEST_PROTOCOL)
+with open('data_full.p', 'wb') as fp:
+    pickle.dump(mstDat, fp, protocol=2)
 

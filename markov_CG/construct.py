@@ -108,15 +108,6 @@ def MP1(m):
 	def logic_1(m, k):#multiplier: u
 		return sum(m.z[k,h] for h in m.H if (k,h) in m.KH) >= 1
 	m.logic1 = Constraint(m.K, rule=logic_1)
-	#def logic_2(m):
-	#	return sum(m.z_bar[h_bar] for h_bar in m.H_bar) >= 1
-	#m.logic2 = Constraint(rule=logic_2)
-	#def logic_3(m,k,h,h_bar):#multiplier: v
-	#	return m.z_bar[h_bar] <= m.z[k,h]
-	#m.logic3 = Constraint(m.D, rule=logic_3)
-	#def logic_4(m,h_bar):#multipler: w
-	#	return m.z_bar[h_bar] >= sum(m.z[k,h] for (k,h,h_bar_prime) in m.D if h_bar_prime == h_bar) - len(m.K) + 1
-	#m.logic4 = Constraint(m.H_bar, rule=logic_4)
 
 	def logic_LO2(m):
 		return sum(m.x_LO2[n] for n in m.N) >= 1
