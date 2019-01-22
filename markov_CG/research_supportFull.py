@@ -4,6 +4,7 @@ import numpy
 import copy
 options = ['active','standby','being repaired']
 unitNum = [3,3,3,3]
+#unitNum = [2,3,2,3]
 failureModes = [['rotor','bearing','Gearbox','LubeOil','motorBearing','motor'],#MAC
 ['generalFailure'],#PPF
 ['rotor','bearing','Gearbox','LubeOil','motorBearing','motor'],#BAC
@@ -352,7 +353,7 @@ def generatePseudoTMatrix(k, level, parameter):#for stage k, total number of uni
         design = [0] * numOfUnit
         for element in alter:
             design[element] = 1
-        #print(design)
+        print(design)
         matrix, states = generateTMatrix(k,design,parameter)
         #for stage in states:
             #print(stage)

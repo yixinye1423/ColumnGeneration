@@ -19,13 +19,13 @@ def MP(m):
 	m.V_LN2 = Param(m.N, default=[100, 400, 700, 1000, 1500])
 	m.c_LO2 = Param(m.N, default=[55, 237, 427, 621, 951])
 	m.c_LN2 = Param(m.N, default=[50, 215, 388, 565, 864])
-	m.pn_LO2 = Param(default=1000)
-	m.pn_LN2 = Param(default=1000)
+	#m.pn_LO2 = Param(default=1000)
+	#m.pn_LN2 = Param(default=1000)
 #NonNegativeReals
-	m.z = Var(m.K, m.H, domain=NonNegativeReals, bounds=(0,1))
-	m.z_bar = Var(m.H_bar, domain=NonNegativeReals, bounds=(0,1))
-	#m.z = Var(m.K, m.H, domain=Boolean)
-	#m.z_bar = Var(m.H_bar, domain=Boolean)
+	#m.z = Var(m.K, m.H, domain=NonNegativeReals, bounds=(0,1))
+	#m.z_bar = Var(m.H_bar, domain=NonNegativeReals, bounds=(0,1))
+	m.z = Var(m.K, m.H, domain=Boolean)
+	m.z_bar = Var(m.H_bar, domain=Boolean)
 	m.x_LO2 = Var(m.N, domain=NonNegativeReals, bounds=(0,1))
 	m.x_LN2 = Var(m.N, domain=NonNegativeReals, bounds=(0,1))
 	m.rfinv_LO2 = Var(m.N, m.H_bar, domain=NonNegativeReals)
@@ -93,13 +93,11 @@ def MP1(m):
 	m.V_LN2 = Param(m.N, default=[100, 400, 700, 1000, 1500])
 	m.c_LO2 = Param(m.N, default=[55, 237, 427, 621, 951])
 	m.c_LN2 = Param(m.N, default=[50, 215, 388, 565, 864])
-	m.pn_LO2 = Param(default=1000)
-	m.pn_LN2 = Param(default=1000)
+	#m.pn_LO2 = Param(default=1000)
+	#m.pn_LN2 = Param(default=1000)
 #NonNegativeReals
-	m.z = Var(m.K, m.H, domain=NonNegativeReals, bounds=(0,1))
-	m.z_bar = Var(m.H_bar, domain=NonNegativeReals, bounds=(0,1))
-	#m.z = Var(m.K, m.H, domain=Boolean)
-	#m.z_bar = Var(m.H_bar, domain=Boolean)
+	#m.z = Var(m.K, m.H, domain=NonNegativeReals, bounds=(0,1))
+	m.z = Var(m.K, m.H, domain=Boolean)
 	m.x_LO2 = Var(m.N, domain=NonNegativeReals, bounds=(0,1))
 	m.x_LN2 = Var(m.N, domain=NonNegativeReals, bounds=(0,1))
 	m.rfinv_LO2 = Var(m.N, m.H_bar, domain=NonNegativeReals)
@@ -121,10 +119,10 @@ def MP1(m):
 	m.invLO21 = Constraint(m.N, m.D, rule=inv_LO2_1)
 	def inv_LO2_2(m, n, h_bar):
 		return m.rfinv_LO2[n,h_bar] <= m.x_LO2[n]*m.finv_LO2[n,h_bar]
-	m.invLO23 = Constraint(m.N, m.H_bar, rule=inv_LO2_2)
+	m.invLO22 = Constraint(m.N, m.H_bar, rule=inv_LO2_2)
 	def inv_LO2_3(m, n, h_bar):
 		return m.rfinv_LO2[n,h_bar] >= (sum(m.z[k,h] for (k,h,h_bar_prime) in m.D if h_bar_prime == h_bar) - len(m.K) +m.x_LO2[n])*m.finv_LO2[n,h_bar]
-	m.invLO24 = Constraint(m.N, m.H_bar, rule=inv_LO2_3)
+	m.invLO23 = Constraint(m.N, m.H_bar, rule=inv_LO2_3)
 
 	def inv_LN2_1(m, n, k, h, h_bar):
 		return m.rfinv_LN2[n,h_bar] <= m.z[k,h]*m.finv_LN2[n,h_bar]

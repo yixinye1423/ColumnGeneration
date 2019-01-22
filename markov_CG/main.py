@@ -15,6 +15,7 @@ from research_supportFull import *
 import time
 import json
 import pickle
+import matplotlib.pyplot as plt
 
 def powerSet(n):
 	sets = list()
@@ -56,9 +57,10 @@ def getData(k):
 		numpy.fill_diagonal(mat, -diag)
 		Qt = numpy.concatenate((numpy.transpose(mat), numpy.ones((1,mat.shape[0]))))
 		b = numpy.concatenate((numpy.zeros((mat.shape[0],)), numpy.ones((1,))))
-		pi = numpy.linalg.lstsq(Qt, b)
+		pi = numpy.linalg.lstsq(Qt, b)[0]
 		isFailure = [state['isFailure'] for state in states_k[h]]
-		data.append({'pi': pi[0], 'diag': diag, 'isFailure':isFailure})
+		data.append({'pi': pi, 'diag': diag, 'isFailure':isFailure})
+		#print(k,h, sum(numpy.multiply(numpy.asarray(pi), numpy.asarray(isFailure))))
 	return data
 
 def combine(dist):#calculate fInv_LO2, fInv_LN2
@@ -81,29 +83,31 @@ def combine(dist):#calculate fInv_LO2, fInv_LN2
 		for k in range(1, len(fullVec)):
 			hat = hat + fullVec[k]
 		return hat	
-	#start = time.time()
+	start = time.time()
+	dist = dist[::-1]
 	pis = numpy.asarray([stage['pi'] for stage in dist])
 	diags = numpy.asarray([stage['diag'] for stage in dist])
 	fails = [stage['isFailure'] for stage in dist]
-	failureInd = sparse.csr_matrix([1-numpy.prod(1-numpy.asarray(tup)) for tup in itertools.product(*fails)])
+	failureInd = sparse.csr_matrix([1-numpy.prod(1-numpy.asarray(tup)) for tup in itertools.product(*fails[::-1])])
 	pi_hat = multiply(pis)
 	pi_hat /= pi_hat.sum()
 	diag_hat = add(diags)#full length vector
-
+	end = time.time()
+	print(end-start)
 	N = len(V_LO2)
 	fInv_LO2 = [None]*N
 	fInv_LN2 = [None]*N
+	starts = time.time()
 	for n in range(N):
 		dh_dense = diag_hat.todense().tolist()[0]
-		#starts = time.time()
+		
 		diag_exp_LO2 = sparse.csr_matrix([exp(-V_LO2[n]/dec_LO2*dh_dense[s]) for s in range(len(dh_dense))])
-		diag_exp_LN2 = sparse.csr_matrix([exp(-V_LO2[n]/dec_LN2*dh_dense[s]) for s in range(len(dh_dense))])
-		#ends = time.time()
-		#print(ends - starts)
+		diag_exp_LN2 = sparse.csr_matrix([exp(-V_LN2[n]/dec_LN2*dh_dense[s]) for s in range(len(dh_dense))])
+
 		fInv_LO2[n] = failureInd.multiply(pi_hat.multiply(diag_hat.multiply(diag_exp_LO2))).sum()
 		fInv_LN2[n] = failureInd.multiply(pi_hat.multiply(diag_hat.multiply(diag_exp_LN2))).sum()
-	#end = time.time()
-	#print(end-start)
+	ends = time.time()
+	print(ends - starts)
 	return (fInv_LO2, fInv_LN2)		
 
 #basic data
@@ -169,7 +173,7 @@ for k in range(len(unitNum)):
 	stageData.append(data)
 #Second level indices
 
-
+'''
 hs = [random.sample(range(len(stageData[k])), int(len(stageData[k])/3*2)) for k in range(len(stageData))]#random
 for k in range(len(stageData)):
 	hs[k].sort()
@@ -179,7 +183,7 @@ hs = [[h for h in range(int(len(stageData[k])/3*2))] for k in range(len(stageDat
 hs = [[0, len(stageData[k])-1] for k in range(len(stageData))]#base
 
 hs = [[0, len(stageData[k])//2 ,len(stageData[k])-1] for k in range(len(stageData))]#selected
-
+'''
 hs = [list(range(len(stageData[k]))) for k in range(len(stageData))]#full
 
 print(hs)
@@ -188,10 +192,11 @@ list2d = [[(k,h) for h in hs[k]] for k in range(len(hs))]
 mstDat['KH'] = {None:[val for sublist in list2d for val in sublist]}
 mstDat['c_hat'] = listCost(cap, hs)
 
-hbars = list(itertools.product(*hs))
-print(len(hbars))
+hbars = list(itertools.product(*hs[::-1]))
+#for hbar in range(len(hbars)):
+#	print(hbar, hbars[hbar][::-1])
 mstDat['H_bar'] = {None:list(range(len(hbars)))}
-list2d = [[(k,hbars[i][k],i) for k in range(len(hbars[i]))] for i in range(len(hbars))]
+list2d = [[(k,hbars[i][len(unitNum)-1-k],i) for k in range(len(hbars[i]))] for i in range(len(hbars))]
 mstDat['D'] = {None:[val for sublist in list2d for val in sublist]}
 
 stageData = [[stageData[k][i] for i in hs[k]] for k in range(len(stageData))]
@@ -199,22 +204,27 @@ stageData = [[stageData[k][i] for i in hs[k]] for k in range(len(stageData))]
 #Calculate frequencies
 fInv = list()
 count = 0
-for comb in itertools.product(*stageData):
+for comb in itertools.product(*stageData[::-1]):
 	fInv.append(combine(comb))
 	count += 1
-	#print(count)
+	print(count)
 print(len(fInv))
 
 fInv_LO2 = dict()
 fInv_LN2 = dict()
+#forPlot = list()
 for h_bar in range(len(fInv)):
 	for n in range(len(fInv[h_bar][0])):
 		fInv_LO2[(n,h_bar)] = 3650*pn_LO2*fInv[h_bar][0][n]
-		fInv_LN2[(n,h_bar)] = 3650*pn_LO2*fInv[h_bar][1][n]
+		fInv_LN2[(n,h_bar)] = 3650*pn_LN2*fInv[h_bar][1][n]
+	#forPlot.append(fInv_LN2[(0,h_bar)])
+#plt.plot(list(range(len(forPlot))), forPlot)
+#plt.show()
 mstDat['finv_LO2'] = fInv_LO2
 mstDat['finv_LN2'] = fInv_LN2
 
 
-with open('data_full.p', 'wb') as fp:
-    pickle.dump(mstDat, fp, protocol=2)
+
+with open('data_full_3333.p', 'wb') as fp:
+    pickle.dump(mstDat, fp, protocol=pickle.HIGHEST_PROTOCOL)
 

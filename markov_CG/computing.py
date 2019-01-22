@@ -16,16 +16,17 @@ import time
 import json
 import pickle
 
-with open('data_full.p', 'rb') as fp:
+with open('data_full_2323.p', 'rb') as fp:
     mstDat = pickle.load(fp)
+
 #create model objects
-Master = MP(AbstractModel())
+Master = MP1(AbstractModel())
 instance = Master.create_instance({None:mstDat})
 instance.dual = Suffix(direction=Suffix.IMPORT)
-#opt = SolverFactory('cplex', executable="C:/Program Files/IBM/ILOG/CPLEX_Studio128/cplex/bin/x64_win64/cplex")
-opt = SolverFactory('cplex', executable="/Applications/CPLEX_Studio128/cplex/bin/x86-64_osx/cplex")
+opt = SolverFactory('cplex', executable="C:/Program Files/IBM/ILOG/CPLEX_Studio128/cplex/bin/x64_win64/cplex")
+#opt = SolverFactory('cplex', executable="/Applications/CPLEX_Studio128/cplex/bin/x86-64_osx/cplex")
 
-opt.solve(instance,tee = False).write()	
+opt.solve(instance,tee = True).write()	
 
 for kh in instance.KH:
 	print(kh, instance.z[kh].value)
@@ -40,11 +41,19 @@ for n in instance.N:
 	print(n, instance.x_LN2[n].value)
 print('-----------------------------------------------------')
 print(sum(instance.rfinv_LO2[n,h_bar].value for (n,h_bar) in instance.N*instance.H_bar))
+print(sum(instance.rfinv_LN2[n,h_bar].value for (n,h_bar) in instance.N*instance.H_bar))
+for n in instance.N:
+	for h_bar in instance.H_bar:
+		print((n,h_bar),instance.rfinv_LO2[n,h_bar].value)
+
+for n in instance.N:
+	for h_bar in instance.H_bar:
+		print((n,h_bar),instance.rfinv_LN2[n,h_bar].value)
 #instance.dual.display()
 #instance.pprint()
 
 '''
-for index in instance.logic4:
+for index in instance.logic4: 
 	if instance.dual[instance.logic4[index]] != 0:
 		print(index, instance.dual[instance.logic4[index]])
 
