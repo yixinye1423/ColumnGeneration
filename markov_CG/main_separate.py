@@ -63,10 +63,16 @@ def getData(k):
 		diag_exp_LO2 = [numpy.asarray([exp(-V_LO2[n]/dec_LO2*diag[s]) for s in range(len(diag))]) for n in range(len(V_LO2))]
 		diag_exp_LN2 = [numpy.asarray([exp(-V_LN2[n]/dec_LN2*diag[s]) for s in range(len(diag))]) for n in range(len(V_LN2))]
 		approx_diag_exp_LO2 = [numpy.asarray([1-V_LO2[n]/dec_LO2*diag[s] for s in range(len(diag))]) for n in range(len(V_LO2))]
-		print('pi', list(pi))
 		for n in range(len(V_LO2)):
+			print('pi', n, list(pi))
+			print('diag', n, list(diag))
 			print('diag_exp',n, list(diag_exp_LO2[n]))
-			print('approx_diag_exp',n, list(approx_diag_exp_LO2[n]))
+			#print('approx_diag_exp',n, list(approx_diag_exp_LO2[n]))
+			#plt.plot(list(range(len(diag))), diag, label = 'diag')
+			#plt.plot(list(range(len(diag_exp_LO2[n]))), diag_exp_LO2[n], label = 'diag_exp_LO2')
+			#plt.plot(list(range(len(approx_diag_exp_LO2[n]))), approx_diag_exp_LO2[n], label = 'approx_diag_exp_LO2')
+			#plt.legend()
+			#plt.show()
 
 		singlepn_LO2 = [3650*pn_LO2*sum(numpy.multiply(numpy.asarray(isFailure), numpy.multiply(numpy.asarray(pi), numpy.multiply(numpy.asarray(diag), diag_exp_LO2[n])))) for n in range(len(V_LO2))]
 		singlepn_LN2 = [3650*pn_LN2*sum(numpy.multiply(numpy.asarray(isFailure), numpy.multiply(numpy.asarray(pi), numpy.multiply(numpy.asarray(diag), diag_exp_LN2[n])))) for n in range(len(V_LN2))]

@@ -84,23 +84,27 @@ def combine(dist):#calculate fInv_LO2, fInv_LN2
 		for k in range(1, len(fullVec)):
 			hat = hat + fullVec[k]
 		return hat	
-	#start = time.time()
+	
 	dist = dist[::-1]
 	pis = numpy.asarray([stage['pi'] for stage in dist])
 	diags = numpy.asarray([stage['diag'] for stage in dist])
 	fails = [stage['isFailure'] for stage in dist]
+
+	start = time.time()
 	pi_hat = multiply(pis)
+	end = time.time()
+	print('prod', end-start)
+
 	pi_hat /= pi_hat.sum()
+
+	start = time.time()
 	diag_hat = add(diags)#full length vector
-	print(type(diag_hat))
-	print(diag_hat.shape)
-	print(diag_hat.todense()[0])
-	plt.plot(list(range(diag_hat.shape[1])), diag_hat.todense()[0][0])
-	#failureInd = sparse.csr_matrix([1-numpy.prod(1-numpy.asarray(tup)) for tup in itertools.product(*fails[::-1])])
-	failureInd = sparse.csr_matrix([1 if sum(tup)==1 else 0 for tup in itertools.product(*fails[::-1]) ])
-	#if sum(list(tup))==1 else 0
-	#end = time.time()
-	#print(end-start)
+	end = time.time()
+	print('add', end-start)
+
+	#failureInd = sparse.csr_matrix([1-numpy.prod(1-numpy.asarray(tup)) for tup in itertools.product(*fails[::-1])])#all failures
+	failureInd = sparse.csr_matrix([1 if sum(tup)==1 else 0 for tup in itertools.product(*fails[::-1]) ])#no multiple failures
+
 	N = len(V_LO2)
 	fInv_LO2 = [None]*N
 	fInv_LN2 = [None]*N
@@ -136,7 +140,7 @@ repa = [[5, 2.4, 3, 3.5, 2, 20],#MAC
 [5],#PPF
 [5, 2.4, 3, 3.5, 2, 20],#BAC
 [5]]#LO2 PUMP
-'''
+
 parameters = [{'lambdas':[[0.00018265,0.00027397,0.00010959,0.00054795,0.00018265,0.00010969]
 ,[0.00019265,0.00028397,0.00011959,0.00055795,0.00019265,0.00011969],
 [0.00020265,0.00029397,0.00012959,0.00056795,0.00020265,0.00012969]],
@@ -149,7 +153,7 @@ parameters = [{'lambdas':[[0.00018265,0.00027397,0.00010959,0.00054795,0.0001826
 {'lambdas':[[0.00054795],[0.00055795],[0.00056795]],'mus':[[2.4],[2.4],[2.4]]}]#LO2 PUMP
 unitNum = [3,3,3,3]
 cap = [[1250,1200,1150],[520,500,480],[1000,950,900],[150,145,140]]
-'''
+
 V_LO2 = [100, 400, 700, 1000, 1500]
 V_LN2 = [100, 400, 700, 1000, 1500]
 c_LO2 = [55, 237, 427, 621, 951]
@@ -232,6 +236,6 @@ mstDat['finv_LN2'] = fInv_LN2
 
 
 
-with open('data_full_2323.p', 'wb') as fp:
+with open('data_full_3333.p', 'wb') as fp:
     pickle.dump(mstDat, fp, protocol=pickle.HIGHEST_PROTOCOL)
 
