@@ -59,29 +59,65 @@ def getData(k):
 		b = numpy.concatenate((numpy.zeros((mat.shape[0],)), numpy.ones((1,))))
 		pi = numpy.linalg.lstsq(Qt, b)[0]
 		isFailure = [state['isFailure'] for state in states_k[h]]
-
-		diag_exp_LO2 = [numpy.asarray([exp(-V_LO2[n]/dec_LO2*diag[s]) for s in range(len(diag))]) for n in range(len(V_LO2))]
-		diag_exp_LN2 = [numpy.asarray([exp(-V_LN2[n]/dec_LN2*diag[s]) for s in range(len(diag))]) for n in range(len(V_LN2))]
-		approx_diag_exp_LO2 = [numpy.asarray([1-V_LO2[n]/dec_LO2*diag[s] for s in range(len(diag))]) for n in range(len(V_LO2))]
-		for n in range(len(V_LO2)):
-			print('pi', n, list(pi))
-			print('diag', n, list(diag))
-			print('diag_exp',n, list(diag_exp_LO2[n]))
-			#print('approx_diag_exp',n, list(approx_diag_exp_LO2[n]))
-			#plt.plot(list(range(len(diag))), diag, label = 'diag')
-			#plt.plot(list(range(len(diag_exp_LO2[n]))), diag_exp_LO2[n], label = 'diag_exp_LO2')
-			#plt.plot(list(range(len(approx_diag_exp_LO2[n]))), approx_diag_exp_LO2[n], label = 'approx_diag_exp_LO2')
-			#plt.legend()
-			#plt.show()
-
-		singlepn_LO2 = [3650*pn_LO2*sum(numpy.multiply(numpy.asarray(isFailure), numpy.multiply(numpy.asarray(pi), numpy.multiply(numpy.asarray(diag), diag_exp_LO2[n])))) for n in range(len(V_LO2))]
-		singlepn_LN2 = [3650*pn_LN2*sum(numpy.multiply(numpy.asarray(isFailure), numpy.multiply(numpy.asarray(pi), numpy.multiply(numpy.asarray(diag), diag_exp_LN2[n])))) for n in range(len(V_LN2))]
-
-		data.append({'pi': pi, 'diag': diag, 'isFailure':isFailure, 'singlepn':{'LO2':singlepn_LO2, 'LN2': singlepn_LN2}})
+		data.append({'pi': pi, 'diag': diag, 'isFailure':isFailure})
 	#plt.plot(range(len(matrix_k)), justk)
 			#print(k,h, n, 3650*pn_LO2*sum(numpy.multiply(numpy.asarray(isFailure), numpy.multiply(numpy.asarray(pi), numpy.multiply(numpy.asarray(diag), diag_exp)))))
 	return data
 
+def combine(dist):#calculate fInv_LO2, fInv_LN2
+	def multiply(vectors):
+		spsVecs = copy.deepcopy(vectors)
+		for k in range(len(vectors)):
+			spsVecs[k] = sparse.csr_matrix(vectors[k])
+		for k in range(1, len(vectors)):
+			spsVecs[k] = sparse.kron(spsVecs[k], spsVecs[k-1])
+		return spsVecs[-1]
+	def add(vectors):
+		leng = [vector.shape[0] for vector in vectors]
+		fullVec = [None]*len(vectors)
+		for k in range(len(vectors)):
+			A = sparse.csr_matrix(numpy.ones(int(numpy.prod(leng[k+1:]))))
+			B = sparse.csr_matrix(vectors[k])
+			C = sparse.csr_matrix(numpy.ones(int(numpy.prod(leng[:k]))))
+			fullVec[k] = sparse.kron(sparse.kron(A,B),C)
+		hat = fullVec[0]
+		for k in range(1, len(fullVec)):
+			hat = hat + fullVec[k]
+		return hat	
+	
+	dist = dist[::-1]
+	pis = numpy.asarray([stage['pi'] for stage in dist])
+	diags = numpy.asarray([stage['diag'] for stage in dist])
+	fails = [stage['isFailure'] for stage in dist]
+
+	start = time.time()
+	pi_hat = multiply(pis)
+	end = time.time()
+	print('prod', end-start)
+
+	pi_hat /= pi_hat.sum()
+
+	start = time.time()
+	diag_hat = add(diags)#full length vector
+	end = time.time()
+	print('add', end-start)
+
+	#failureInd = sparse.csr_matrix([1-numpy.prod(1-numpy.asarray(tup)) for tup in itertools.product(*fails[::-1])])#all failures
+	failureInd = sparse.csr_matrix([1 if sum(tup)==1 else 0 for tup in itertools.product(*fails[::-1]) ])#no multiple failures
+
+	N = len(V_LO2)
+	fInv_LO2 = [None]*N
+	fInv_LN2 = [None]*N
+	#starts = time.time()
+	for n in range(N):
+		dh_dense = diag_hat.todense().tolist()[0]
+		diag_exp_LO2 = sparse.csr_matrix([exp(-V_LO2[n]/dec_LO2*dh_dense[s]) for s in range(len(dh_dense))])
+		diag_exp_LN2 = sparse.csr_matrix([exp(-V_LN2[n]/dec_LN2*dh_dense[s]) for s in range(len(dh_dense))])
+		fInv_LO2[n] = failureInd.multiply(pi_hat.multiply(diag_hat.multiply(diag_exp_LO2))).sum()
+		fInv_LN2[n] = failureInd.multiply(pi_hat.multiply(diag_hat.multiply(diag_exp_LN2))).sum()
+	#ends = time.time()
+	#print(ends - starts)
+	return (fInv_LO2, fInv_LN2)
 
 #basic data
 options = ['active','standby','being repaired']
@@ -104,7 +140,7 @@ repa = [[5, 2.4, 3, 3.5, 2, 20],#MAC
 [5],#PPF
 [5, 2.4, 3, 3.5, 2, 20],#BAC
 [5]]#LO2 PUMP
-'''
+
 parameters = [{'lambdas':[[0.00018265,0.00027397,0.00010959,0.00054795,0.00018265,0.00010969]
 ,[0.00019265,0.00028397,0.00011959,0.00055795,0.00019265,0.00011969],
 [0.00020265,0.00029397,0.00012959,0.00056795,0.00020265,0.00012969]],
@@ -117,7 +153,7 @@ parameters = [{'lambdas':[[0.00018265,0.00027397,0.00010959,0.00054795,0.0001826
 {'lambdas':[[0.00054795],[0.00055795],[0.00056795]],'mus':[[2.4],[2.4],[2.4]]}]#LO2 PUMP
 unitNum = [3,3,3,3]
 cap = [[1250,1200,1150],[520,500,480],[1000,950,900],[150,145,140]]
-'''
+
 V_LO2 = [100, 400, 700, 1000, 1500]
 V_LN2 = [100, 400, 700, 1000, 1500]
 c_LO2 = [55, 237, 427, 621, 951]
@@ -178,29 +214,28 @@ stageData = [[stageData[k][i] for i in hs[k]] for k in range(len(stageData))]
 fInv = list()
 count = 0
 for comb in itertools.product(*stageData[::-1]):
-	fInv.append([[sum(stage['singlepn']['LO2'][n] for stage in comb) for n in range(len(V_LO2))], [sum(stage['singlepn']['LN2'][n] for stage in comb) for n in range(len(V_LN2))]])
+	fInv.append(combine(comb))
 	count += 1
 	#print(count)
 print(len(fInv))
 
 fInv_LO2 = dict()
 fInv_LN2 = dict()
-forPlot = list()
-forPlot2 = list()
-forPlot3 = list()
+#forPlot = list()
+
 for h_bar in range(len(fInv)):
 	for n in range(len(fInv[h_bar][0])):
-		fInv_LO2[(n,h_bar)] = fInv[h_bar][0][n]
-		fInv_LN2[(n,h_bar)] = fInv[h_bar][1][n]
+		fInv_LO2[(n,h_bar)] = 3650*pn_LO2*fInv[h_bar][0][n]
+		fInv_LN2[(n,h_bar)] = 3650*pn_LN2*fInv[h_bar][1][n]
 	#forPlot.append(fInv_LO2[(2,h_bar)])
 #plt.plot(list(range(len(forPlot))), forPlot)
 #plt.show()
 #print(forPlot)
 mstDat['finv_LO2'] = fInv_LO2
 mstDat['finv_LN2'] = fInv_LN2
-#print(fInv_LO2, fInv_LN2)
 
 
-with open('data_full_2323_sep.p', 'wb') as fp:
+
+with open('data_full_3333.p', 'wb') as fp:
     pickle.dump(mstDat, fp, protocol=pickle.HIGHEST_PROTOCOL)
 
