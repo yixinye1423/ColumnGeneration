@@ -56,39 +56,89 @@ pn_LO2 = 2000
 pn_LN2 = 2000
 dec_LO2 = 48
 dec_LN2 = 60
+def combine(dist):#calculate fInv_LO2, fInv_LN2
+	def multiply(vectors):
+		spsVecs = copy.deepcopy(vectors)
+		for k in range(len(vectors)):
+			spsVecs[k] = sparse.csr_matrix(vectors[k])
+		for k in range(1, len(vectors)):
+			spsVecs[k] = sparse.kron(spsVecs[k], spsVecs[k-1])
+		return spsVecs[-1]
+	def add(vectors):
+		leng = [vector.shape[0] for vector in vectors]
+		fullVec = [None]*len(vectors)
+		for k in range(len(vectors)):
+			A = sparse.csr_matrix(numpy.ones(int(numpy.prod(leng[k+1:]))))
+			B = sparse.csr_matrix(vectors[k])
+			C = sparse.csr_matrix(numpy.ones(int(numpy.prod(leng[:k]))))
+			fullVec[k] = sparse.kron(sparse.kron(A,B),C)
+		hat = fullVec[0]
+		for k in range(1, len(fullVec)):
+			hat = hat + fullVec[k]
+		return hat	
+	
+	pis = numpy.asarray([stage['pi'] for stage in dist])
+	diags = numpy.asarray([stage['diag'] for stage in dist])
+	fails = [stage['isFailure'] for stage in dist]
 
-#get basic data
-with open('stageData.p', 'rb') as fp:
-	stageData = pickle.load(fp)['None']
-with open('result_2323_full_sep.p', 'rb') as fp:
-	zkhhr = pickle.load(fp)
-print(zkhhr)
+	start = time.time()
+	pi_hat = multiply(pis)
+	end = time.time()
+	print('prod', end-start)
 
-clean = {k:v for k, v in zkhhr.items() if v==1}
-print(clean)
-'''
-for key in zkhhr:
-	if zkhhr[key] != 1:
-		zkhhr.pop(key,None)
+	pi_hat /= pi_hat.sum()
 
-for k in range(len(stageData)):
-	for h in range(len(stageData[k])):
-		selectedComp = 
-		for hr in stageData[k][h]['complementary']:
-			for l in list(range(len(stageData))).remove(k):
-'''
+	start = time.time()
+	diag_hat = add(diags)#full length vector
+	end = time.time()
+	print('add', end-start)
+
+	#failureInd = sparse.csr_matrix([1-numpy.prod(1-numpy.asarray(tup)) for tup in itertools.product(*fails[::-1])])#all failures
+	failureInd = sparse.csr_matrix([1 if sum(tup)==1 else 0 for tup in itertools.product(*fails[::-1]) ])#no multiple failures
+
+	N = len(V_LO2)
+	fInv_LO2 = [None]*N
+	fInv_LN2 = [None]*N
+	#starts = time.time()
+	for n in range(N):
+		dh_dense = diag_hat.todense().tolist()[0]
+		diag_exp_LO2 = sparse.csr_matrix([exp(-V_LO2[n]/dec_LO2*dh_dense[s]) for s in range(len(dh_dense))])
+		diag_exp_LN2 = sparse.csr_matrix([exp(-V_LN2[n]/dec_LN2*dh_dense[s]) for s in range(len(dh_dense))])
+		fInv_LO2[n] = failureInd.multiply(pi_hat.multiply(diag_hat.multiply(diag_exp_LO2))).sum()
+		fInv_LN2[n] = failureInd.multiply(pi_hat.multiply(diag_hat.multiply(diag_exp_LN2))).sum()
+	#ends = time.time()
+	#print(ends - starts)
+	return (fInv_LO2, fInv_LN2)
+
+def updateData():
+	def isConverged():
+		for comb in selectCombs:
+			k = comb[0]
+			h = comb[1]
+			hr = comb[2]
+			if stageData[k][h]['complementary'][hr] != tuple([selectDesign[l] for l in list(range(len(stageData))).remove(k)]):
+				return False
+		return True
+	def addNewPoints():#add new subdesigns that are part of the current solution
+		for k in range(len(stageData)):
+			comb = [stageData[k][selectDesign[l]] for l in list(range(len(stageData))).remove(k)]
+			f,g = combine(comb)
 
 
+	#get basic data
+	with open('stageData.p', 'rb') as fp:
+		stageData = pickle.load(fp)['None']
+	with open('result_2323_full_sep.p', 'rb') as fp:
+		zkhhr = pickle.load(fp)
+	print(zkhhr)
 
-'''
-fInv_LO2 = dict()
-fInv_LN2 = dict()
-for k in range(len(hs)):
-	for h in range(len(hs[k])):
-		for n in range(len(V_LO2)):
-			fInv_LO2[(n,k,h)] = stageData[k][h]['singlepn']['LO2'][n]
-			fInv_LN2[(n,k,h)] = stageData[k][h]['singlepn']['LN2'][n]
-mstDat['finv_LO2'] = fInv_LO2
-mstDat['finv_LN2'] = fInv_LN2
-'''
+	selectCombs = {k for k,v in zkhhr.items() if v==1}#remove unselected comb's
+	print(selectCombs)
+	selectDesign = {comb[0]:comb[1] for comb in selectCombs}
+
+	if isConverged():
+		print('Oh yeah')
+		return
+	else:
+		addNewPoints()
 
