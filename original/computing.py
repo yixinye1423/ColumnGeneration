@@ -20,7 +20,7 @@ with open('data_full_2323_sep.p', 'rb') as fp:
     mstDat = pickle.load(fp)
 
 #create model objects
-Master = MP1(AbstractModel())
+Master = MP(AbstractModel())
 instance = Master.create_instance({None:mstDat})
 instance.dual = Suffix(direction=Suffix.IMPORT)
 opt = SolverFactory('cplex', executable="C:/Program Files/IBM/ILOG/CPLEX_Studio128/cplex/bin/x64_win64/cplex")

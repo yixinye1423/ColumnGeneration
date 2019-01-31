@@ -38,8 +38,8 @@ def saveResult(resultFile, instance):
 		pickle.dump(solution, fp, protocol=pickle.HIGHEST_PROTOCOL)
 
 def procedure():
-	instance = run('data_2323_full_sep.p',MP)
-	saveResult('result_2323_full_sep.p',instance)
+	instance = run('data_3433_full_sep.p',MP)
+	saveResult('result_3433_full_sep.p',instance)
 	#run('data_2323_full.p',MP)
 	return
 
