@@ -244,7 +244,9 @@ fInv_LO21 = dict()
 fInv_LN21 = dict()
 fInv_LO22 = dict()
 fInv_LN22 = dict()
-forPlot = list()
+forPlot1 = list()
+forPlot2 = list()
+forPlot3 = list()
 
 for h_bar in range(len(fInv1)):
 	for n in range(len(fInv1[h_bar][0])):
@@ -252,8 +254,14 @@ for h_bar in range(len(fInv1)):
 		fInv_LN21[(n,h_bar)] = 3650*pn_LN2*fInv1[h_bar][1][n]
 		fInv_LO22[(n,h_bar)] = fInv2[h_bar][0][n]
 		fInv_LN22[(n,h_bar)] = fInv2[h_bar][1][n]
-	forPlot.append(fInv_LO21[(1,h_bar)]/fInv_LO22[(1,h_bar)])
-plt.plot(list(range(len(forPlot))), forPlot)
+	forPlot1.append(fInv_LO21[1,h_bar])
+	forPlot2.append(fInv_LO22[1,h_bar])
+	#forPlot3.append(fInv_LO21[(1,h_bar)]-fInv_LO22[(1,h_bar)])
+print(forPlot1)
+print(forPlot2)
+plt.plot(list(range(len(forPlot1))), forPlot1)
+plt.plot(list(range(len(forPlot2))), forPlot2)
+#plt.plot(list(range(len(forPlot3))), forPlot3)
 plt.show()
 #print(numpy.var(forPlot))
 mstDat['finv_LO2'] = fInv_LO21

@@ -3,8 +3,8 @@ import itertools
 import numpy
 import copy
 options = ['active','standby','being repaired']
-unitNum = [3,4,3,3]
-#unitNum = [2,3,2,3]
+unitNum = [2,3,2,3]
+#unitNum = [3,4,3,3]
 failureModes = [['rotor','bearing','Gearbox','LubeOil','motorBearing','motor'],#MAC
 ['generalFailure'],#PPF
 ['rotor','bearing','Gearbox','LubeOil','motorBearing','motor'],#BAC
