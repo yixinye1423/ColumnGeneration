@@ -4,7 +4,7 @@ import pyomo
 #from pyomo.core import Var
 from pyomo.environ import *
 
-def MP_Init(m):
+def MP_Indep(m):#initial independent optimization/equilibrium checking
 	m.K = Set()
 	m.H = Set()
 	m.KH = Set(within=m.K*m.H)
@@ -63,7 +63,51 @@ def MP_Init(m):
 	m.obj = Objective(rule=netcost, sense=minimize)
 	return m
 
-def MP(m):
+def MP_extend(m):#extend based on current optimum
+	m.H_bar = Set()
+	m.N = Set()
+	m.c_hat = Param(m.H_bar, default=0)
+	m.finv_LO2 = Param(m.N, m.H_bar)
+	m.finv_LN2 = Param(m.N, m.H_bar)
+	m.c_LO2 = Param(m.N, default=[55, 237, 427, 621, 951])
+	m.c_LN2 = Param(m.N, default=[50, 215, 388, 565, 864])
+#NonNegativeReals
+	#m.z = Var(m.K, m.H, domain=NonNegativeReals, bounds=(0,1))
+	m.z_bar = Var(m.H_bar, domain=Boolean)
+	m.x_LO2 = Var(m.N, domain=NonNegativeReals, bounds=(0,1))
+	m.x_LN2 = Var(m.N, domain=NonNegativeReals, bounds=(0,1))
+	m.rfinv_LO2 = Var(m.N, m.H_bar, domain=NonNegativeReals)
+	m.rfinv_LN2 = Var(m.N, m.H_bar, domain=NonNegativeReals)
+
+	def logic_LO2(m):
+		return sum(m.x_LO2[n] for n in m.N) >= 1
+	m.logicLO2 = Constraint(rule=logic_LO2)
+	def logic_LN2(m):
+		return sum(m.x_LN2[n] for n in m.N) >= 1
+	m.logicLN2 = Constraint(rule=logic_LN2)
+
+	def inv_LO2_1(m, n, h_bar):
+		return m.rfinv_LO2[n,h_bar] <= m.z_bar[h_bar]*m.finv_LO2[n,h_bar]
+	m.invLO21 = Constraint(m.N, m.H_bar, rule=inv_LO2_1)
+	def inv_LO2_2(m, n, h_bar):
+		return m.rfinv_LO2[n,h_bar] <= m.x_LO2[n]*m.finv_LO2[n,h_bar]
+	m.invLO22 = Constraint(m.N, m.H_bar, rule=inv_LO2_2)
+
+	def inv_LN2_1(m, n, h_bar):
+		return m.rfinv_LN2[n,h_bar] <= m.z_bar[h_bar]*m.finv_LN2[n,h_bar]
+	m.invLN21 = Constraint(m.N, m.H_bar, rule=inv_LN2_1)
+	def inv_LN2_2(m, n, h_bar):
+		return m.rfinv_LN2[n,h_bar] <= m.x_LN2[n]*m.finv_LN2[n,h_bar]
+	m.invLN22 = Constraint(m.N, m.H_bar, rule=inv_LN2_2)
+
+	def netcost(m):
+		return sum(m.c_hat[h_bar]*m.z[h_bar] for h_bar in m.H_bar) + sum(m.x_LO2[n]*m.c_LO2[n] for n in m.N)+ sum(m.x_LN2[n]*m.c_LN2[n] for n in m.N)+ sum(m.rfinv_LO2[n,h_bar] for (n,h_bar) in m.N*m.H_bar)+ sum(m.rfinv_LN2[n,h_bar] for (n,h_bar) in m.N*m.H_bar)
+	m.obj = Objective(rule=netcost, sense=minimize)
+	return m
+
+'''
+#-------------------------------------------------------------
+def MP_extend(m):#extend based on current optimum
 	m.K = Set()
 	m.H = Set()
 	m.KH = Set(within=m.K*m.H)
@@ -130,3 +174,4 @@ def MP(m):
 		+ sum(m.rfinv_LN2[n,k,h,hr] for (n,k,h,hr) in m.N*m.KHHR ))
 	m.obj = Objective(rule=netcost, sense=minimize)
 	return m
+'''
