@@ -152,4 +152,64 @@ def updateData():
 
 	with open('data_3433_full_sep.p', 'wb') as fp:
 	    pickle.dump(mstDat, fp, protocol=pickle.HIGHEST_PROTOCOL)
-updateData()
+
+def perturb(stageFile, sepDataFile,sysDataFile, candilogFile):
+	with open(stageFile, 'rb') as fp:
+		stageData = pickle.load(fp)[None]
+	with open(dataFile, 'rb') as fp:
+	    mstDat = pickle.load(fp)#add h_bar, change fInv, remove K, H, KH
+	zkh = dict()
+	for k in range(len(stageData)):
+		for h in range(len(stageData[k])):
+			if stageData[k][h]['selected'] == True:
+				zkh[k] = h
+	fInv_LO2 = list()
+	fInv_LN2 = list()
+	candilog = list()
+	N = len(mstDat['N'][None])
+	for k in range(len(stageData)):
+		for h in range(len(stageData[k])): 
+			firstPiece_LO2 = [sepDataFile['fInv_LO2'][(n,k,h)] for n in range(N)]
+			firstPiece_LN2 = [sepDataFile['fInv_LN2'][(n,k,h)] for n in range(N)]
+			candilog.append({k:h})
+			for l in range(len(stageData)):
+				if l == k:
+					continue
+				else:
+					candilog[-1][l]=zkh[l]
+					comb = list()
+					for j in range(len(stageData)):
+						if j == l:
+							continue
+						elif j == k:
+							comb.append(stageData[j][h])
+						else:
+							comb.append(stageData[j][zkh[j]])
+				Phi_LO2, Theta_LO2, Phi_LN2, Theta_LN2 = combine(comb)
+				for n in range(N):
+					firstPiece_LO2[n] += stageData[l][h]['singlepn']['LO2'][n]*Phi_LO2[n] + stageData[l][h]['stagePhi']['LO2'][n]*Theta_LO2[n]
+					firstPiece_LN2[n] += stageData[l][h]['singlepn']['LN2'][n]*Phi_LN2[n] + stageData[l][h]['stagePhi']['LN2'][n]*Theta_LN2[n]
+			fInv_LO2.append(firstPiece_LO2)
+			fInv_LN2.append(firstPiece_LN2)
+	finv_LO2 = dict()
+	finv_LN2 = dict()
+	for h_bar in range(len(candilog)):
+		for n in range(N):
+			finv_LO2[(n,h_bar)] = fInv_LO2[h_bar][n]
+			finv_LN2[(n,h_bar)] = fInv_LN2[h_bar][n]
+	mstDat['H_bar'] = {None:list(len(candilog))}
+	mstDat['finv_LO2'] = finv_LO2
+	mstDat['finv_LN2'] = fnv_LN2
+	mstDat.pop('K', None)
+	mstDat.pop('H', None)
+	mstDat.pop('KH', None)
+	with open(sysDataFile, 'wb') as fp:
+		pickle.dump(mstDat, fp, protocol=pickle.HIGHEST_PROTOCOL)
+	with open(candilogFile, 'wb') as fp:
+		pickle.dump({None:candilog}, fp, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+
+
+
+

@@ -88,41 +88,69 @@ def run(dataFile, model):
 	instance.pprint()
 	return instance
 
-def saveResult_stagewise(resultFile, instance):
+def saveResult_stagewise(stageFile, instance):
 	solution = dict()
 	for (k,h) in instance.KH:
 		solution[(k,h)]= instance.z[k,h].value
-		print(solution[k,h])
-	print(solution)
-	with open(resultFile, 'wb') as fp: 
-		pickle.dump(solution, fp, protocol=pickle.HIGHEST_PROTOCOL)
+		#print(solution[k,h])
+	#print(solution)
+	with open(stageFile, 'rb') as fp:
+		stageData = pickle.load(fp)[None]
+	for k in range(len(stageData)):
+		for h in range(len(stageData[k])):
+			stageData[k][h]['selected'] = False
+			if abs(solution[(k,h)] - 1) < 10**(-5):
+				stageData[k][h]['selected'] = True
+	with open(stageFile, 'wb') as fp:
+		pickle.dump({'None':stageData}, fp, protocol=pickle.HIGHEST_PROTOCOL)
 
-def saveResult_system(resultFile, instance):
-	solution = dict()
+def saveResult_system(stageFile, candilogFile, instance):#to be changed
+	with open(stageFile, 'rb') as fp:
+		stageData = pickle.load(fp)[None]
+	with open(candilogFile, 'rb') as fp:
+		candilog = pickle.load(fp)[None]
+
 	for h_bar in instance.H_bar:
-		solution[h_bar]= instance.z_bar[h_bar].value
-		print(solution[h_bar])
-	print(solution)
-	with open(resultFile, 'wb') as fp: 
-		pickle.dump(solution, fp, protocol=pickle.HIGHEST_PROTOCOL)
+		if abs(instance.z_bar[h_bar].value-1)<10**(-5):
+			solution = candilog[h_bar]
+	for k in range(len(stageData)):
+		for h in range(len(stageData[k])):
+			stageData[k][h]['selected'] = False
+			if solution[k] == h:
+				stageData[k][h]['selected'] = True
+
+	with open(stageFile, 'wb') as fp: 
+		pickle.dump(stageData, fp, protocol=pickle.HIGHEST_PROTOCOL)
+
+def isConverged(stageFile, instance):
+	with open(stageFile, 'rb') as fp:
+		stageData = pickle.load(fp)[None]
+	for k in range(len(stageData)):
+		for h in range(len(stageData[k])):
+			if abs(solution[(k,h)] - 1) < 10*(-5):
+				if stageData[k][h]['selected'] == False:
+					return False
+	return True
+				
 
 def procedure():
-	Init('stageData.p','data_3433_sep_0.p')
-	instance = run('data_3433_sep_0.p',MP_Indep)
-	saveResult_stagewise('result_3433_sep_0.p',instance)
+	Init('stageData.p','data_sep.p')
+	instance = run('data_sep.p',MP_Indep)
+	saveResult_stagewise('stageData.p',instance)
 	count = 1
 	while True:
-		pair('stageData.p','result_3433_sys_%s.p' %(count-1),'data_3433_sep_%s.p' %count)#calculate complementary parameters
-		ECinstance = run('data_3433_sep_%s.p' %count,MP_Indep)#equilibrium checking optimization
-		saveResult_stagewise('result_3433_sep_%s.p' %count, ECinstance)
-		if isConverged('result_3433_sep%s.p'):#check if the result indicates equilibrium
+		pair('stageData.p','data_sep.p')#calculate complementary parameters
+		ECinstance = run('data_sep.p',MP_Indep)#equilibrium checking optimization
+		#saveResult_stagewise('stageData.p' %count, ECinstance)
+		if isConverged('stageData.p',ECinstance):#check if the result indicates equilibrium
+			print('converged')
 			break
-		perturb('stageData.p','result_3433_sys_%s.p' %(count-1),'data_3433_sys_%s.p' %count)#generate system level data
-		POinstance = run('data_3433_sys_%s.p' %count, MP_extend)#partial optimization
-		saveResult_system('result_3433_sys_%s.p' %count,POinstance)
+		perturb('stageData.p','data_sep.p', 'data_sys.p', 'candilog.p')#generate system level data
+		POinstance = run('data_sys.p', MP_extend)#partial optimization
+		saveResult_system('stageData.p', 'candilog.p', POinstance)
 		count += 1
 
-
+ 
 
 opt = SolverFactory('cplex', executable="C:/Program Files/IBM/ILOG/CPLEX_Studio128/cplex/bin/x64_win64/cplex")
 #opt = SolverFactory('cplex', executable="/Applications/CPLEX_Studio128/cplex/bin/x86-64_osx/cplex")
