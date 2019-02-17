@@ -36,10 +36,7 @@ parameters = [{'lambdas':[[0.00018265,0.00027397,0.00010959,0.00054795,0.0001826
 {'lambdas':[[0.00054795],[0.00055795],[0.00056795]],'mus':[[2.4],[2.4],[2.4]]}]#LO2 PUMP
 unitNum = [2,3,2,3]
 cap = [[1250,1200],[520,500,480],[1000,950],[150,145,140]]
-repa = [[5, 2.4, 3, 3.5, 2, 20],#MAC 
-[5],#PPF
-[5, 2.4, 3, 3.5, 2, 20],#BAC
-[5]]#LO2 PUMP
+
 
 parameters = [{'lambdas':[[0.00018265,0.00027397,0.00010959,0.00054795,0.00018265,0.00010969]
 ,[0.00019265,0.00028397,0.00011959,0.00055795,0.00019265,0.00011969],
@@ -132,6 +129,47 @@ def isConverged(stageFile, instance):
 					return False
 	return True
 				
+def Init(stageFile, dataFile):
+	#First level indices
+	mstDat = dict()
+	mstDat['K'] = {None:list(range(len(unitNum)))}
+	hlist = [len(powerSet(j)) for j in unitNum]
+	mstDat['H'] = {None:list(range(max(hlist)))}
+
+	mstDat['N'] = {None:list(range(len(V_LO2)))}
+	mstDat['c_LO2'] = {n: c_LO2[n] for n in range(len(c_LO2))}
+	mstDat['c_LN2'] = {n: c_LN2[n] for n in range(len(c_LN2))}
+
+	#matrix
+	stageData = list()
+	for k in range(len(unitNum)):
+		data = getData(k, parameters,V_LO2, V_LN2, dec_LO2, dec_LN2, pn_LO2, pn_LN2)
+		stageData.append(data)
+
+	hs = [list(range(len(stageData[k]))) for k in range(len(stageData))]#full
+	stageData = [[stageData[k][h] for h in hs[k]] for k in range(len(hs))]
+
+	print(hs)
+	list2d = [[(k,h) for h in hs[k]] for k in range(len(hs))]
+
+	mstDat['KH'] = {None:[val for sublist in list2d for val in sublist]}
+	mstDat['c_hat'] = listCost(cap, hs)
+
+	fInv_LO2 = dict()
+	fInv_LN2 = dict()
+	for k in range(len(hs)):
+		for h in range(len(hs[k])):
+			for n in range(len(V_LO2)):
+				fInv_LO2[(n,k,h)] = stageData[k][h]['singlepn']['LO2'][n]
+				fInv_LN2[(n,k,h)] = stageData[k][h]['singlepn']['LN2'][n]
+	mstDat['finv_LO2'] = fInv_LO2
+	mstDat['finv_LN2'] = fInv_LN2
+
+	with open(stageFile, 'wb') as fp:
+		pickle.dump({'None':stageData}, fp, protocol=pickle.HIGHEST_PROTOCOL)
+
+	with open(dataFile, 'wb') as fp:
+	    pickle.dump(mstDat, fp, protocol=pickle.HIGHEST_PROTOCOL)
 
 def procedure():
 	Init('stageData.p','data_sep.p')

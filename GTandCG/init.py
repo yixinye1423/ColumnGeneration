@@ -33,18 +33,18 @@ def numberAndRavel(matrix_k, states_k):
 			state['label'] = h
 	states_k = list(itertools.chain(*states_k))
 	return (matrix_k, states_k)
-def pseudoMat(k):
+def pseudoMat(k, parameter_k):
 	matrix_k = list()
 	states_k = list()
 	for level in range(1,unitNum[k]+1):
 		if (k==1 and level==1): continue
-		matrix_k_level, states_k_level = generatePseudoTMatrix(k, level, parameters[k])#list of dictionaries
+		matrix_k_level, states_k_level = generatePseudoTMatrix(k, level, parameter_k)#list of dictionaries
 		matrix_k.extend(matrix_k_level)
 		states_k.extend(states_k_level)
 	#matrix_k, states_k = numberAndRavel(matrix_k, states_k)
 	return matrix_k, states_k 
-def getData(k):
-	matrix_k, states_k = pseudoMat(k)#pseudo matrix of stage l
+def getData(k, parameters, V_LO2, V_LN2, dec_LO2, dec_LN2, pn_LO2, pn_LN2):
+	matrix_k, states_k = pseudoMat(k, parameters[k])#pseudo matrix of stage l
 	data = list()
 	for h in range(len(matrix_k)):
 		mat = numpy.asarray(matrix_k[h])
@@ -69,44 +69,3 @@ def getData(k):
 		#'complementary' list of the format:{1:(1,2,4), ...}
 	return data
 
-def Init(stageFile, dataFile):
-	#First level indices
-	mstDat = dict()
-	mstDat['K'] = {None:list(range(len(unitNum)))}
-	hlist = [len(powerSet(j)) for j in unitNum]
-	mstDat['H'] = {None:list(range(max(hlist)))}
-
-	mstDat['N'] = {None:list(range(len(V_LO2)))}
-	mstDat['c_LO2'] = {n: c_LO2[n] for n in range(len(c_LO2))}
-	mstDat['c_LN2'] = {n: c_LN2[n] for n in range(len(c_LN2))}
-
-	#matrix
-	stageData = list()
-	for k in range(len(unitNum)):
-		data = getData(k)
-		stageData.append(data)
-
-	hs = [list(range(len(stageData[k]))) for k in range(len(stageData))]#full
-	stageData = [[stageData[k][h] for h in hs[k]] for k in range(len(hs))]
-
-	print(hs)
-	list2d = [[(k,h) for h in hs[k]] for k in range(len(hs))]
-
-	mstDat['KH'] = {None:[val for sublist in list2d for val in sublist]}
-	mstDat['c_hat'] = listCost(cap, hs)
-
-	fInv_LO2 = dict()
-	fInv_LN2 = dict()
-	for k in range(len(hs)):
-		for h in range(len(hs[k])):
-			for n in range(len(V_LO2)):
-				fInv_LO2[(n,k,h)] = stageData[k][h]['singlepn']['LO2'][n]
-				fInv_LN2[(n,k,h)] = stageData[k][h]['singlepn']['LN2'][n]
-	mstDat['finv_LO2'] = fInv_LO2
-	mstDat['finv_LN2'] = fInv_LN2
-
-	with open(stageFile, 'wb') as fp:
-		pickle.dump({'None':stageData}, fp, protocol=pickle.HIGHEST_PROTOCOL)
-
-	with open(dataFile, 'wb') as fp:
-	    pickle.dump(mstDat, fp, protocol=pickle.HIGHEST_PROTOCOL)
