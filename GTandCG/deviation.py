@@ -11,7 +11,7 @@ import time
 import json
 import pickle
 import matplotlib.pyplot as plt
-def combine(dist):#calculate fInv_LO2, fInv_LN2
+def combine(dist, V_LO2, V_LN2, dec_LO2, dec_LN2):#calculate fInv_LO2, fInv_LN2
 	def multiply(vectors):
 		spsVecs = copy.deepcopy(vectors)
 		for k in range(len(vectors)):
@@ -56,7 +56,7 @@ def combine(dist):#calculate fInv_LO2, fInv_LN2
 		g_LO2[n] = avaiInd.multiply(pi_hat.multiply(diag_exp_LO2)).sum()
 		f_LN2[n] = avaiInd.multiply(pi_hat.multiply(diag_hat.multiply(diag_exp_LN2))).sum()
 		g_LN2[n] = avaiInd.multiply(pi_hat.multiply(diag_exp_LN2)).sum()
-	print(f_LO2, g_LO2, f_LN2, g_LN2)
+	#print(f_LO2, g_LO2, f_LN2, g_LN2)
 	#ends = time.time()
 	#print(ends - starts)
 	return f_LO2, g_LO2, f_LN2, g_LN2
@@ -71,9 +71,11 @@ def correction(stageData):
 		Theta_LN2.append(Theta_LN2_k)
 	return Phi_LO2, Theta_LO2, Phi_LN2, Theta_LN2
 
-def pair(stageFile, dataFile):
+def pair(stageFile, dataFile,V_LO2, V_LN2, dec_LO2, dec_LN2):
 	with open(stageFile, 'rb') as fp:
 	    stageData = pickle.load(fp)[None]
+	with open(dataFile, 'rb') as fp:
+		mstDat = pickle.load(fp)
 	zkh = dict()
 	for k in range(len(stageData)):
 		for h in range(len(stageData[k])):
@@ -81,9 +83,9 @@ def pair(stageFile, dataFile):
 				zkh[k] = h
 	fInv_LO2 = dict()
 	fInv_LN2 = dict()
-	for k in range(len(hs)):
-		for h in range(len(hs[k])):
-			Phi_LO2, Theta_LO2, Phi_LN2, Theta_LN2 = combine([stageData[l][zkh[l]] for l in range(len(stageData)) if l != k ])
+	for k in range(len(stageData)):
+		for h in range(len(stageData[k])):
+			Phi_LO2, Theta_LO2, Phi_LN2, Theta_LN2 = combine([stageData[l][zkh[l]] for l in range(len(stageData)) if l != k ],V_LO2, V_LN2, dec_LO2, dec_LN2)
 			for n in range(len(V_LO2)):
 				fInv_LO2[(n,k,h)] = stageData[k][h]['singlepn']['LO2'][n]*Phi_LO2[n] + stageData[k][h]['stagePhi']['LO2'][n]*Theta_LO2[n]
 				fInv_LN2[(n,k,h)] = stageData[k][h]['singlepn']['LN2'][n]*Phi_LN2[n] + stageData[k][h]['stagePhi']['LN2'][n]*Theta_LN2[n]
@@ -91,7 +93,7 @@ def pair(stageFile, dataFile):
 	mstDat['finv_LN2'] = fInv_LN2
 
 	with open(stageFile, 'wb') as fp:
-		pickle.dump({'None':stageData}, fp, protocol=pickle.HIGHEST_PROTOCOL)
+		pickle.dump({None:stageData}, fp, protocol=pickle.HIGHEST_PROTOCOL)
 
 	with open(dataFile, 'wb') as fp:
 	    pickle.dump(mstDat, fp, protocol=pickle.HIGHEST_PROTOCOL)

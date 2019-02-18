@@ -77,20 +77,21 @@ dec_LN2 = 60
 def run(dataFile, model):
 	with open(dataFile, 'rb') as fp:
 	    mstDat = pickle.load(fp)
-	print(mstDat)
 	#create model object
 	instance = model(AbstractModel()).create_instance({None:mstDat})
-	instance.dual = Suffix(direction=Suffix.IMPORT)
-	opt.solve(instance,tee = True).write()	
-	instance.pprint()
+	#instance.dual = Suffix(direction=Suffix.IMPORT)
+	opt.solve(instance,tee = False).write()	
+	#instance.pprint()
 	return instance
 
 def saveResult_stagewise(stageFile, instance):
 	solution = dict()
 	for (k,h) in instance.KH:
 		solution[(k,h)]= instance.z[k,h].value
-		#print(solution[k,h])
-	#print(solution)
+	print(solution)
+	for n in instance.N:
+		print(instance.x_LO2[n].value)
+		print(instance.x_LN2[n].value)
 	with open(stageFile, 'rb') as fp:
 		stageData = pickle.load(fp)[None]
 	for k in range(len(stageData)):
@@ -99,7 +100,7 @@ def saveResult_stagewise(stageFile, instance):
 			if abs(solution[(k,h)] - 1) < 10**(-5):
 				stageData[k][h]['selected'] = True
 	with open(stageFile, 'wb') as fp:
-		pickle.dump({'None':stageData}, fp, protocol=pickle.HIGHEST_PROTOCOL)
+		pickle.dump({None:stageData}, fp, protocol=pickle.HIGHEST_PROTOCOL)
 
 def saveResult_system(stageFile, candilogFile, instance):#to be changed
 	with open(stageFile, 'rb') as fp:
@@ -110,6 +111,10 @@ def saveResult_system(stageFile, candilogFile, instance):#to be changed
 	for h_bar in instance.H_bar:
 		if abs(instance.z_bar[h_bar].value-1)<10**(-5):
 			solution = candilog[h_bar]
+	print(solution)
+	for n in instance.N:
+		print(instance.x_LO2[n].value)
+		print(instance.x_LN2[n].value)
 	for k in range(len(stageData)):
 		for h in range(len(stageData[k])):
 			stageData[k][h]['selected'] = False
@@ -124,66 +129,26 @@ def isConverged(stageFile, instance):
 		stageData = pickle.load(fp)[None]
 	for k in range(len(stageData)):
 		for h in range(len(stageData[k])):
-			if abs(solution[(k,h)] - 1) < 10*(-5):
+			if abs(instance.z[k,h].value - 1) < 10**(-5):
 				if stageData[k][h]['selected'] == False:
 					return False
 	return True
 				
-def Init(stageFile, dataFile):
-	#First level indices
-	mstDat = dict()
-	mstDat['K'] = {None:list(range(len(unitNum)))}
-	hlist = [len(powerSet(j)) for j in unitNum]
-	mstDat['H'] = {None:list(range(max(hlist)))}
 
-	mstDat['N'] = {None:list(range(len(V_LO2)))}
-	mstDat['c_LO2'] = {n: c_LO2[n] for n in range(len(c_LO2))}
-	mstDat['c_LN2'] = {n: c_LN2[n] for n in range(len(c_LN2))}
-
-	#matrix
-	stageData = list()
-	for k in range(len(unitNum)):
-		data = getData(k, parameters,V_LO2, V_LN2, dec_LO2, dec_LN2, pn_LO2, pn_LN2)
-		stageData.append(data)
-
-	hs = [list(range(len(stageData[k]))) for k in range(len(stageData))]#full
-	stageData = [[stageData[k][h] for h in hs[k]] for k in range(len(hs))]
-
-	print(hs)
-	list2d = [[(k,h) for h in hs[k]] for k in range(len(hs))]
-
-	mstDat['KH'] = {None:[val for sublist in list2d for val in sublist]}
-	mstDat['c_hat'] = listCost(cap, hs)
-
-	fInv_LO2 = dict()
-	fInv_LN2 = dict()
-	for k in range(len(hs)):
-		for h in range(len(hs[k])):
-			for n in range(len(V_LO2)):
-				fInv_LO2[(n,k,h)] = stageData[k][h]['singlepn']['LO2'][n]
-				fInv_LN2[(n,k,h)] = stageData[k][h]['singlepn']['LN2'][n]
-	mstDat['finv_LO2'] = fInv_LO2
-	mstDat['finv_LN2'] = fInv_LN2
-
-	with open(stageFile, 'wb') as fp:
-		pickle.dump({'None':stageData}, fp, protocol=pickle.HIGHEST_PROTOCOL)
-
-	with open(dataFile, 'wb') as fp:
-	    pickle.dump(mstDat, fp, protocol=pickle.HIGHEST_PROTOCOL)
 
 def procedure():
-	Init('stageData.p','data_sep.p')
+	Init('stageData.p','data_sep.p', parameters,V_LO2, V_LN2, dec_LO2, dec_LN2, pn_LO2, pn_LN2, c_LO2, c_LN2, cap)
 	instance = run('data_sep.p',MP_Indep)
 	saveResult_stagewise('stageData.p',instance)
 	count = 1
 	while True:
-		pair('stageData.p','data_sep.p')#calculate complementary parameters
+		pair('stageData.p','data_sep.p',V_LO2, V_LN2, dec_LO2, dec_LN2)#calculate complementary parameters
 		ECinstance = run('data_sep.p',MP_Indep)#equilibrium checking optimization
 		#saveResult_stagewise('stageData.p' %count, ECinstance)
 		if isConverged('stageData.p',ECinstance):#check if the result indicates equilibrium
 			print('converged')
 			break
-		perturb('stageData.p','data_sep.p', 'data_sys.p', 'candilog.p')#generate system level data
+		perturb('stageData.p','data_sep.p', 'data_sys.p', 'candilog.p',V_LO2, V_LN2, dec_LO2, dec_LN2)#generate system level data
 		POinstance = run('data_sys.p', MP_extend)#partial optimization
 		saveResult_system('stageData.p', 'candilog.p', POinstance)
 		count += 1
