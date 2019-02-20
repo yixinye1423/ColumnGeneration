@@ -63,7 +63,8 @@ def getData(k, parameters, V_LO2, V_LN2, dec_LO2, dec_LN2, pn_LO2, pn_LN2):
 		singlepn_LN2 = [3650*pn_LN2*sum(numpy.multiply(numpy.asarray(isFailure), numpy.multiply(numpy.asarray(pi), numpy.multiply(numpy.asarray(diag), diag_exp_LN2[n])))) for n in range(len(V_LN2))]
 		stagePhi_LO2 = [3650*pn_LO2*sum(numpy.multiply(numpy.asarray(isFailure), numpy.multiply(numpy.asarray(pi), diag_exp_LO2[n]))) for n in range(len(V_LO2))]
 		stagePhi_LN2 = [3650*pn_LN2*sum(numpy.multiply(numpy.asarray(isFailure), numpy.multiply(numpy.asarray(pi), diag_exp_LN2[n]))) for n in range(len(V_LN2))]
-
+		#print(singlepn_LO2)
+		#print(stagePhi_LO2)
 		#print(singlepn_LO2, singlepn_LN2)
 		data.append({'pi': pi, 'diag': diag, 'isFailure':isFailure, 'singlepn':{'LO2':singlepn_LO2, 'LN2': singlepn_LN2},'stagePhi':{'LO2':stagePhi_LO2, 'LN2':stagePhi_LN2}, 'selected':False})
 		#'complementary' list of the format:{1:(1,2,4), ...}

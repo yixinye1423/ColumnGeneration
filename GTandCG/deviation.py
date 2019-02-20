@@ -62,9 +62,9 @@ def combine(dist, V_LO2, V_LN2, dec_LO2, dec_LN2):#calculate fInv_LO2, fInv_LN2
 	return f_LO2, g_LO2, f_LN2, g_LN2
 
 def correction(stageData):
-	Phi_LO2, Theta_LO2, Phi_LN2, Theta_LN2 = list(), list(), list(), list()
+	Theta_LO2, Phi_LO2, Theta_LN2, Phi_LN2 = list(), list(), list(), list()
 	for k in range(len(stageData)):
-		Phi_LO2_k, Theta_LO2_k, Phi_LN2_k, Theta_LN2_k = combine([stageData[l][h] for h in range(len(stageData[l])) if stageData[l][h]['selected']==True for l in range(len(stageData)) if l != k ])
+		Theta_LO2_k, Phi_LO2_k, Theta_LN2_k, Phi_LN2_k = combine([stageData[l][h] for h in range(len(stageData[l])) if stageData[l][h]['selected']==True for l in range(len(stageData)) if l != k ])
 		Phi_LO2.append(Phi_LO2_k)
 		Phi_LN2.append(Phi_LN2_k)
 		Theta_LO2.append(Theta_LO2_k)
@@ -85,9 +85,11 @@ def pair(stageFile, dataFile,V_LO2, V_LN2, dec_LO2, dec_LN2):
 	fInv_LN2 = dict()
 	for k in range(len(stageData)):
 		for h in range(len(stageData[k])):
-			Phi_LO2, Theta_LO2, Phi_LN2, Theta_LN2 = combine([stageData[l][zkh[l]] for l in range(len(stageData)) if l != k ],V_LO2, V_LN2, dec_LO2, dec_LN2)
+			Theta_LO2, Phi_LO2, Theta_LN2, Phi_LN2 = combine([stageData[l][zkh[l]] for l in range(len(stageData)) if l != k ],V_LO2, V_LN2, dec_LO2, dec_LN2)
+			#print(Phi_LO2, Theta_LO2)
 			for n in range(len(V_LO2)):
 				fInv_LO2[(n,k,h)] = stageData[k][h]['singlepn']['LO2'][n]*Phi_LO2[n] + stageData[k][h]['stagePhi']['LO2'][n]*Theta_LO2[n]
+				#print(fInv_LO2[(n,k,h)])
 				fInv_LN2[(n,k,h)] = stageData[k][h]['singlepn']['LN2'][n]*Phi_LN2[n] + stageData[k][h]['stagePhi']['LN2'][n]*Theta_LN2[n]
 	mstDat['finv_LO2'] = fInv_LO2
 	mstDat['finv_LN2'] = fInv_LN2

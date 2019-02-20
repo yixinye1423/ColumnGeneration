@@ -62,33 +62,47 @@ def combine(dist,V_LO2, V_LN2, dec_LO2, dec_LN2):#calculate fInv_LO2, fInv_LN2
 	#print(ends - starts)
 	return f_LO2, g_LO2, f_LN2, g_LN2
 
-def perturb(stageFile, sepDataFile,sysDataFile, candilogFile,V_LO2, V_LN2, dec_LO2, dec_LN2):
+def perturb(stageFile, sepDataFile,sysDataFile, candilogFile, V_LO2, V_LN2, dec_LO2, dec_LN2):
 	with open(stageFile, 'rb') as fp:
 		stageData = pickle.load(fp)[None]
-	with open(sepDataFile, 'rb') as fp:
-	    mstDat = pickle.load(fp)
+	if os.path.getsize(sysDataFile) == 0:
+		with open(sepDataFile, 'rb') as fp:
+		    mstDat = pickle.load(fp)
+	else:
+		with open(sysDataFile, 'rb') as fp:
+			mstDat = pickle.load(fp)
+		print(a)
 	zkh = dict()
 	for k in range(len(stageData)):
 		for h in range(len(stageData[k])):
 			if stageData[k][h]['selected'] == True:
 				zkh[k] = h
+	print("perturbing based on: ", zkh)
 	c_hat = mstDat['c_hat']
 	fInv_LO2 = list()
 	fInv_LN2 = list()
 	candilog = list()
 	cost = list()
 	N = len(mstDat['N'][None])
+	with open(candilogFile, 'rb') as fp:
+		oldCandilog = pickle.load(fp)[None]
+
 	for k in range(len(stageData)):
 		for h in range(len(stageData[k])): 
+			candi = {k:h}
+			for l in range(len(stageData)):
+				if l != k:
+					candi[l]=zkh[l]
+			if candi in oldCandilog:
+				continue	
+			candilog.append(candi)
 			firstPiece_LO2 = [mstDat['finv_LO2'][(n,k,h)] for n in range(N)]
 			firstPiece_LN2 = [mstDat['finv_LN2'][(n,k,h)] for n in range(N)]
-			candilog.append({k:h})
 			cost.append(c_hat[(k,h)])
 			for l in range(len(stageData)):
 				if l == k:
 					continue
 				else:
-					candilog[-1][l]=zkh[l]
 					cost[-1]+=c_hat[(l,zkh[l])]
 					comb = list()
 					for j in range(len(stageData)):
@@ -104,16 +118,17 @@ def perturb(stageFile, sepDataFile,sysDataFile, candilogFile,V_LO2, V_LN2, dec_L
 					firstPiece_LN2[n] += (stageData[l][zkh[l]]['singlepn']['LN2'][n]*Phi_LN2[n] + stageData[l][zkh[l]]['stagePhi']['LN2'][n]*Theta_LN2[n])
 			fInv_LO2.append(firstPiece_LO2)
 			fInv_LN2.append(firstPiece_LN2)
+	candilog = oldCandilog + candilog
 	finv_LO2 = dict()
 	finv_LN2 = dict()
-	for h_bar in range(len(candilog)):
+	for h_bar in range(len(oldCandilog), len(candilog)):
 		for n in range(N):
-			finv_LO2[(n,h_bar)] = fInv_LO2[h_bar][n]
-			finv_LN2[(n,h_bar)] = fInv_LN2[h_bar][n]
+			finv_LO2[(n,h_bar)] = fInv_LO2[h_bar-len(oldCandilog)][n]
+			finv_LN2[(n,h_bar)] = fInv_LN2[h_bar-len(oldCandilog)][n]	
 	mstDat['H_bar'] = {None:list(range(len(candilog)))}
-	mstDat['finv_LO2'] = finv_LO2
-	mstDat['finv_LN2'] = finv_LN2
-	mstDat['c_hat'] = {h_bar: cost[h_bar] for h_bar in range(len(cost))}
+	mstDat['finv_LO2'].update(finv_LO2)
+	mstDat['finv_LN2'].update(finv_LN2)
+	mstDat['c_hat'].update({h_bar+len(oldCandilog): cost[h_bar] for h_bar in range(len(cost))})
 	mstDat.pop('K', None)
 	mstDat.pop('H', None)
 	mstDat.pop('KH', None)

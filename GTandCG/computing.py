@@ -49,7 +49,9 @@ parameters = [{'lambdas':[[0.00018265,0.00027397,0.00010959,0.00054795,0.0001826
 'mus':[[0.1,0.2,0.143,3,0.5,0.0222],[0.1,0.2,0.143,3,0.5,0.0222],[0.1,0.2,0.143,3,0.5,0.0222]]},#BAC
 {'lambdas':[[0.00054795],[0.00055795],[0.00056795]],'mus':[[2.4],[2.4],[2.4]]}]#LO2 PUMP
 unitNum = [3,4,3,3]
-cap = [[1250,1200,1150],[520,500,480,460],[1000,950,900],[150,145,140]]
+#cap = [[1250,1200,1150],[520,500,480,460],[1000,950,900],[150,145,140]]
+cap = [[1250,1240,1230],[520,515,510,505],[1000,990,980],[150,145,140]]
+
 
 parameters = [{'lambdas':[[0.00018265,0.00027397,0.00010959,0.00054795,0.00018265,0.00010969],
 [0.00018275,0.00027407,0.00010969,0.00054805,0.00018275,0.00010979],
@@ -60,10 +62,16 @@ parameters = [{'lambdas':[[0.00018265,0.00027397,0.00010959,0.00054795,0.0001826
 [0.00018275,0.00027407,0.00010969,0.00054805,0.00018275,0.00010979],
 [0.00018285,0.00027417,0.00010979,0.00054815,0.00018285,0.00010989]],
 'mus':[[0.1,0.2,0.143,3,0.5,0.0222],[0.1,0.2,0.143,3,0.5,0.0222],[0.1,0.2,0.143,3,0.5,0.0222]]},#BAC
-{'lambdas':[[0.00054795],[0.00054805],[0.00054815]],'mus':[[2.4],[2.4],[2.4]]}]#LO2 PUMP
+#{'lambdas':[[0.00054795],[0.00054805],[0.00054815]],'mus':[[2.4],[2.4],[2.4]]}]#LO2 PUMP
+#{'lambdas':[[0.001644],[0.001654],[0.001664]],'mus':[[1.2],[1.2],[1.2]]}]#LO2 PUMP
+{'lambdas':[[0.0054795],[0.0054805],[0.0054815]],'mus':[[2.4],[2.4],[2.4]]}]#LO2 PUMP
 unitNum = [3,4,3,3]
 #cap = [[1250,1200,1150],[520,500,480,460],[1000,950,900],[150,145,140]]
-cap = [[1250,1240,1230],[520,515,510,505],[1000,990,980],[150,145,140]]
+#cap = [[1250,1249,1248],[520,519,518,517],[1000,999,998],[150,149,148]]
+cap = [[1250,1250,1250],[520,520,520,520],[1000,1000,1000],[150,150,150]]
+
+
+
 V_LO2 = [100, 400, 700, 1000, 1500]
 V_LN2 = [100, 400, 700, 1000, 1500]
 c_LO2 = [55, 237, 427, 621, 951]
@@ -89,9 +97,6 @@ def saveResult_stagewise(stageFile, instance):
 	for (k,h) in instance.KH:
 		solution[(k,h)]= instance.z[k,h].value
 	print(solution)
-	for n in instance.N:
-		print(instance.x_LO2[n].value)
-		print(instance.x_LN2[n].value)
 	with open(stageFile, 'rb') as fp:
 		stageData = pickle.load(fp)[None]
 	for k in range(len(stageData)):
@@ -110,19 +115,19 @@ def saveResult_system(stageFile, candilogFile, instance):#to be changed
 
 	for h_bar in instance.H_bar:
 		if abs(instance.z_bar[h_bar].value-1)<10**(-5):
-			solution = candilog[h_bar]
-	print(solution)
-	for n in instance.N:
-		print(instance.x_LO2[n].value)
-		print(instance.x_LN2[n].value)
+			break
+			#solution = candilog[h_bar]
+			#break
+	#print(solution)
+	print(candilog[h_bar])
 	for k in range(len(stageData)):
 		for h in range(len(stageData[k])):
 			stageData[k][h]['selected'] = False
-			if solution[k] == h:
+			if candilog[h_bar][k] == h:
 				stageData[k][h]['selected'] = True
 
 	with open(stageFile, 'wb') as fp: 
-		pickle.dump(stageData, fp, protocol=pickle.HIGHEST_PROTOCOL)
+		pickle.dump({None:stageData}, fp, protocol=pickle.HIGHEST_PROTOCOL)
 
 def isConverged(stageFile, instance):
 	with open(stageFile, 'rb') as fp:
@@ -130,6 +135,7 @@ def isConverged(stageFile, instance):
 	for k in range(len(stageData)):
 		for h in range(len(stageData[k])):
 			if abs(instance.z[k,h].value - 1) < 10**(-5):
+				print(k,h)
 				if stageData[k][h]['selected'] == False:
 					return False
 	return True
@@ -137,6 +143,10 @@ def isConverged(stageFile, instance):
 
 
 def procedure():
+	open('stageData.p','w')
+	open('data_sep.p','w')
+	open('data_sys.p','w')
+	open('candilog.p','w')
 	Init('stageData.p','data_sep.p', parameters,V_LO2, V_LN2, dec_LO2, dec_LN2, pn_LO2, pn_LN2, c_LO2, c_LN2, cap)
 	instance = run('data_sep.p',MP_Indep)
 	saveResult_stagewise('stageData.p',instance)

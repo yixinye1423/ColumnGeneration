@@ -101,7 +101,7 @@ def MP_extend(m):#extend based on current optimum
 	m.invLN22 = Constraint(m.N, m.H_bar, rule=inv_LN2_2)
 
 	def netcost(m):
-		return sum(m.c_hat[h_bar]*m.z[h_bar] for h_bar in m.H_bar) + sum(m.x_LO2[n]*m.c_LO2[n] for n in m.N)+ sum(m.x_LN2[n]*m.c_LN2[n] for n in m.N)+ sum(m.rfinv_LO2[n,h_bar] for (n,h_bar) in m.N*m.H_bar)+ sum(m.rfinv_LN2[n,h_bar] for (n,h_bar) in m.N*m.H_bar)
+		return sum(m.c_hat[h_bar]*m.z_bar[h_bar] for h_bar in m.H_bar) + sum(m.x_LO2[n]*m.c_LO2[n] for n in m.N)+ sum(m.x_LN2[n]*m.c_LN2[n] for n in m.N)+ sum(m.rfinv_LO2[n,h_bar] for (n,h_bar) in m.N*m.H_bar)+ sum(m.rfinv_LN2[n,h_bar] for (n,h_bar) in m.N*m.H_bar)
 	m.obj = Objective(rule=netcost, sense=minimize)
 	return m
 
