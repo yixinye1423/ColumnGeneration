@@ -15,8 +15,8 @@ def combine(dist, V_LO2, V_LN2, dec_LO2, dec_LN2):#calculate fInv_LO2, fInv_LN2
 	def multiply(vectors):
 		spsVecs = copy.deepcopy(vectors)
 		for k in range(len(vectors)):
-			spsVecs[k] = sparse.csr_matrix(vectors[k])
-		for k in range(1, len(vectors)):
+			spsVecs[k] = sparse.csr_matrix(spsVecs[k])
+		for k in range(1, len(spsVecs)):
 			spsVecs[k] = sparse.kron(spsVecs[k], spsVecs[k-1])
 		return spsVecs[-1]
 	def add(vectors):
@@ -32,11 +32,10 @@ def combine(dist, V_LO2, V_LN2, dec_LO2, dec_LN2):#calculate fInv_LO2, fInv_LN2
 			hat = hat + fullVec[k]
 		return hat	
 	
-	pis = numpy.asarray([stage['pi'] for stage in dist])
-	diags = numpy.asarray([stage['diag'] for stage in dist])
+	pis = [stage['pi'] for stage in dist]
+	diags = [stage['diag'] for stage in dist]
 	fails = [stage['isFailure'] for stage in dist]
 	pi_hat = multiply(pis)
-	pi_hat /= pi_hat.sum()
 	diag_hat = add(diags)#full length vector
 	dh_dense = diag_hat.todense().tolist()[0]
 	#failureInd = sparse.csr_matrix([1-numpy.prod(1-numpy.asarray(tup)) for tup in itertools.product(*fails[::-1])])#all failures
@@ -81,6 +80,7 @@ def pair(stageFile, dataFile,V_LO2, V_LN2, dec_LO2, dec_LN2):
 		for h in range(len(stageData[k])):
 			if stageData[k][h]['selected'] == True:
 				zkh[k] = h
+	print('checking equilibrium of: ', zkh)
 	fInv_LO2 = dict()
 	fInv_LN2 = dict()
 	for k in range(len(stageData)):

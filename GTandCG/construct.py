@@ -78,7 +78,9 @@ def MP_extend(m):#extend based on current optimum
 	m.x_LN2 = Var(m.N, domain=NonNegativeReals, bounds=(0,1))
 	m.rfinv_LO2 = Var(m.N, m.H_bar, domain=NonNegativeReals)
 	m.rfinv_LN2 = Var(m.N, m.H_bar, domain=NonNegativeReals)
-
+	def logic_1(m):#multiplier: u
+		return sum(m.z_bar[h_bar] for h_bar in m.H_bar if h_bar in m.H_bar) >= 1
+	m.logic1 = Constraint(m.H_bar, rule=logic_1)
 	def logic_LO2(m):
 		return sum(m.x_LO2[n] for n in m.N) >= 1
 	m.logicLO2 = Constraint(rule=logic_LO2)
@@ -92,6 +94,9 @@ def MP_extend(m):#extend based on current optimum
 	def inv_LO2_2(m, n, h_bar):
 		return m.rfinv_LO2[n,h_bar] <= m.x_LO2[n]*m.finv_LO2[n,h_bar]
 	m.invLO22 = Constraint(m.N, m.H_bar, rule=inv_LO2_2)
+	def inv_LO2_3(m, n, h_bar):
+		return m.rfinv_LO2[n,h_bar] >= (m.z_bar[h_bar] + m.x_LO2[n] - 1)*m.finv_LO2[n,h_bar]
+	m.invLO23 = Constraint(m.N, m.H_bar, rule=inv_LO2_3)
 
 	def inv_LN2_1(m, n, h_bar):
 		return m.rfinv_LN2[n,h_bar] <= m.z_bar[h_bar]*m.finv_LN2[n,h_bar]
@@ -99,6 +104,9 @@ def MP_extend(m):#extend based on current optimum
 	def inv_LN2_2(m, n, h_bar):
 		return m.rfinv_LN2[n,h_bar] <= m.x_LN2[n]*m.finv_LN2[n,h_bar]
 	m.invLN22 = Constraint(m.N, m.H_bar, rule=inv_LN2_2)
+	def inv_LN2_3(m, n, h_bar):
+		return m.rfinv_LN2[n,h_bar] >= (m.z_bar[h_bar] + m.x_LN2[n] - 1)*m.finv_LN2[n,h_bar]
+	m.invLN23 = Constraint(m.N, m.H_bar, rule=inv_LN2_3)
 
 	def netcost(m):
 		return sum(m.c_hat[h_bar]*m.z_bar[h_bar] for h_bar in m.H_bar) + sum(m.x_LO2[n]*m.c_LO2[n] for n in m.N)+ sum(m.x_LN2[n]*m.c_LN2[n] for n in m.N)+ sum(m.rfinv_LO2[n,h_bar] for (n,h_bar) in m.N*m.H_bar)+ sum(m.rfinv_LN2[n,h_bar] for (n,h_bar) in m.N*m.H_bar)

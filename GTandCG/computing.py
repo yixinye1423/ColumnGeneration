@@ -112,18 +112,27 @@ def saveResult_system(stageFile, candilogFile, instance):#to be changed
 		stageData = pickle.load(fp)[None]
 	with open(candilogFile, 'rb') as fp:
 		candilog = pickle.load(fp)[None]
-
+	h_bar_star = 0
 	for h_bar in instance.H_bar:
 		if abs(instance.z_bar[h_bar].value-1)<10**(-5):
+			print(h_bar)
+	for n in instance.N:
+		if abs(instance.x_LO2[n].value-1)<10**(-5):
+			print(n)
+		if abs(instance.x_LN2[n].value-1)<10**(-5):
+			print(n)
+	for h_bar in instance.H_bar:
+		if abs(instance.z_bar[h_bar].value-1)<10**(-5):
+			h_bar_star = h_bar
 			break
 			#solution = candilog[h_bar]
 			#break
 	#print(solution)
-	print(candilog[h_bar])
+	print(candilog[h_bar_star])
 	for k in range(len(stageData)):
 		for h in range(len(stageData[k])):
 			stageData[k][h]['selected'] = False
-			if candilog[h_bar][k] == h:
+			if candilog[h_bar_star][k] == h:
 				stageData[k][h]['selected'] = True
 
 	with open(stageFile, 'wb') as fp: 
@@ -135,7 +144,11 @@ def isConverged(stageFile, instance):
 	for k in range(len(stageData)):
 		for h in range(len(stageData[k])):
 			if abs(instance.z[k,h].value - 1) < 10**(-5):
-				print(k,h)
+				print(k,h) 
+	for k in range(len(stageData)):
+		for h in range(len(stageData[k])):
+			if abs(instance.z[k,h].value - 1) < 10**(-5):
+				#print(k,h)
 				if stageData[k][h]['selected'] == False:
 					return False
 	return True
