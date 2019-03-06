@@ -135,6 +135,12 @@ def saveResult_system(stageFile, candilogFile, instance):#to be changed
 			if candilog[h_bar_star][k] == h:
 				stageData[k][h]['selected'] = True
 
+	print('unit cost',sum(instance.c_hat[h_bar]*instance.z_bar[h_bar].value for h_bar in instance.H_bar))
+	print('LO2 tank cost',sum(instance.x_LO2[n].value*instance.c_LO2[n] for n in instance.N))
+	print('LN2 tank cost',sum(instance.x_LN2[n].value*instance.c_LN2[n] for n in instance.N))	
+	print('LO2 penalty',sum(instance.rfinv_LO2[n,h_bar].value for (n,h_bar) in instance.N*instance.H_bar))
+	print('LN2 penalty',sum(instance.rfinv_LN2[n,h_bar].value for (n,h_bar) in instance.N*instance.H_bar))
+
 	with open(stageFile, 'wb') as fp: 
 		pickle.dump({None:stageData}, fp, protocol=pickle.HIGHEST_PROTOCOL)
 
@@ -145,6 +151,11 @@ def isConverged(stageFile, instance):
 		for h in range(len(stageData[k])):
 			if abs(instance.z[k,h].value - 1) < 10**(-5):
 				print(k,h) 
+	print('unit cost',sum(instance.c_hat[k,h]*instance.z[k,h].value for (k,h) in instance.KH))
+	print('LO2 tank cost',sum(instance.x_LO2[n].value*instance.c_LO2[n] for n in instance.N))
+	print('LN2 tank cost',sum(instance.x_LN2[n].value*instance.c_LN2[n] for n in instance.N))	
+	print('LO2 penalty',sum(instance.rfinv_LO2[n,k,h].value for (n,k,h) in instance.N*instance.KH))
+	print('LN2 penalty',sum(instance.rfinv_LN2[n,k,h].value for (n,k,h) in instance.N*instance.KH))
 	for k in range(len(stageData)):
 		for h in range(len(stageData[k])):
 			if abs(instance.z[k,h].value - 1) < 10**(-5):

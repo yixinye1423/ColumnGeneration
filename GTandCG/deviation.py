@@ -91,6 +91,7 @@ def pair(stageFile, dataFile,V_LO2, V_LN2, dec_LO2, dec_LN2):
 				fInv_LO2[(n,k,h)] = stageData[k][h]['singlepn']['LO2'][n]*Phi_LO2[n] + stageData[k][h]['stagePhi']['LO2'][n]*Theta_LO2[n]
 				#print(fInv_LO2[(n,k,h)])
 				fInv_LN2[(n,k,h)] = stageData[k][h]['singlepn']['LN2'][n]*Phi_LN2[n] + stageData[k][h]['stagePhi']['LN2'][n]*Theta_LN2[n]
+	#print(fInv_LO2)
 	mstDat['finv_LO2'] = fInv_LO2
 	mstDat['finv_LN2'] = fInv_LN2
 

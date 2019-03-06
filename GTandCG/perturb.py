@@ -126,10 +126,12 @@ def perturb(stageFile, sepDataFile,sysDataFile, candilogFile, V_LO2, V_LN2, dec_
 							comb.append(stageData[j][h])
 						else:
 							comb.append(stageData[j][zkh[j]])
-				Phi_LO2, Theta_LO2, Phi_LN2, Theta_LN2 = combine(comb,V_LO2, V_LN2, dec_LO2, dec_LN2)
+				Theta_LO2, Phi_LO2, Theta_LN2, Phi_LN2 = combine(comb,V_LO2, V_LN2, dec_LO2, dec_LN2)
 				for n in range(N):
-					firstPiece_LO2[n] += (stageData[l][zkh[l]]['singlepn']['LO2'][n]*Phi_LO2[n] + stageData[l][zkh[l]]['stagePhi']['LO2'][n]*Theta_LO2[n])
-					firstPiece_LN2[n] += (stageData[l][zkh[l]]['singlepn']['LN2'][n]*Phi_LN2[n] + stageData[l][zkh[l]]['stagePhi']['LN2'][n]*Theta_LN2[n])
+					incre_LO2 = stageData[l][zkh[l]]['singlepn']['LO2'][n]*Phi_LO2[n] + stageData[l][zkh[l]]['stagePhi']['LO2'][n]*Theta_LO2[n]
+					incre_LN2 = stageData[l][zkh[l]]['singlepn']['LN2'][n]*Phi_LN2[n] + stageData[l][zkh[l]]['stagePhi']['LN2'][n]*Theta_LN2[n]
+					firstPiece_LO2[n] += incre_LO2
+					firstPiece_LN2[n] += incre_LN2
 			fInv_LO2.append(firstPiece_LO2)
 			fInv_LN2.append(firstPiece_LN2)
 
@@ -137,10 +139,12 @@ def perturb(stageFile, sepDataFile,sysDataFile, candilogFile, V_LO2, V_LN2, dec_
 	finv_LO2 = dict()
 	finv_LN2 = dict()
 	for h_bar in range(len(oldCandilog), len(candilog)):
+		#print(candilog[h_bar])
 		for n in range(N):
 			finv_LO2[(n,h_bar)] = fInv_LO2[h_bar-len(oldCandilog)][n]
 			finv_LN2[(n,h_bar)] = fInv_LN2[h_bar-len(oldCandilog)][n]
-		
+			#print(finv_LO2[(n,h_bar)])
+	
 	if sysDat==dict():
 		sysDat['finv_LO2'] = finv_LO2
 		sysDat['finv_LN2'] = finv_LN2
@@ -155,9 +159,9 @@ def perturb(stageFile, sepDataFile,sysDataFile, candilogFile, V_LO2, V_LN2, dec_
 		sysDat['c_hat'].update({h_bar+len(oldCandilog): cost[h_bar] for h_bar in range(len(cost))})	
 		#print(list(range(len(oldCandilog), len(candilog))))
 		sysDat['H_bar'] = {None: sysDat['H_bar'][None] + list(range(len(oldCandilog), len(candilog)))}	
-	
-	print(sysDat)
-	print(candilog)
+	#print(sysDat['finv_LO2'])
+	#print(sysDat)
+	print(len(candilog))
 	with open(sysDataFile, 'wb') as fp:
 		pickle.dump(sysDat, fp, protocol=pickle.HIGHEST_PROTOCOL)
 	with open(candilogFile, 'wb') as fp:

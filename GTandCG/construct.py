@@ -15,10 +15,12 @@ def MP_Indep(m):#initial independent optimization/equilibrium checking
 	m.finv_LN2 = Param(m.N, m.KH)
 	m.V_LO2 = Param(m.N, default=[100, 400, 700, 1000, 1500])
 	m.V_LN2 = Param(m.N, default=[100, 400, 700, 1000, 1500])
-	m.c_LO2 = Param(m.N, default=[55, 237, 427, 621, 951])
-	m.c_LN2 = Param(m.N, default=[50, 215, 388, 565, 864])
+	#m.c_LO2 = Param(m.N, default=[55, 237, 427, 621, 951])
+	#m.c_LN2 = Param(m.N, default=[50, 215, 388, 565, 864])
+	m.c_LO2 = Param(m.N, default=[55, 80, 120, 180, 250])
+	m.c_LN2 = Param(m.N, default=[50, 75, 115, 160, 240])
 #NonNegativeReals
-	#m.z = Var(m.K, m.H, domain=NonNegativeReals, bounds=(0,1))
+	#m.z = Var(m.KH, domain=NonNegativeReals, bounds=(0,1))
 	m.z = Var(m.KH, domain=Boolean)
 	m.x_LO2 = Var(m.N, domain=NonNegativeReals, bounds=(0,1))
 	m.x_LN2 = Var(m.N, domain=NonNegativeReals, bounds=(0,1))
@@ -59,7 +61,7 @@ def MP_Indep(m):#initial independent optimization/equilibrium checking
 	def netcost(m):
 		return (sum(m.c_hat[k,h]*m.z[k,h] for (k,h) in m.KH) 
 			+ sum(m.x_LO2[n]*m.c_LO2[n] for n in m.N)+ sum(m.x_LN2[n]*m.c_LN2[n] for n in m.N)
-			+ sum(m.rfinv_LO2[n,k,h] for (n,k,h) in m.N*m.KH)+ sum(m.rfinv_LN2[n,k,h] for (n,k,h) in m.N*m.KH))
+			+ sum(m.rfinv_LO2[n,k,h] for (n,k,h) in m.N*m.KH) + sum(m.rfinv_LN2[n,k,h] for (n,k,h) in m.N*m.KH))
 	m.obj = Objective(rule=netcost, sense=minimize)
 	return m
 
@@ -69,8 +71,10 @@ def MP_extend(m):#extend based on current optimum
 	m.c_hat = Param(m.H_bar, default=0)
 	m.finv_LO2 = Param(m.N, m.H_bar)
 	m.finv_LN2 = Param(m.N, m.H_bar)
-	m.c_LO2 = Param(m.N, default=[55, 237, 427, 621, 951])
-	m.c_LN2 = Param(m.N, default=[50, 215, 388, 565, 864])
+	#m.c_LO2 = Param(m.N, default=[55, 237, 427, 621, 951])
+	#m.c_LN2 = Param(m.N, default=[50, 215, 388, 565, 864])
+	m.c_LO2 = Param(m.N, default=[55, 80, 120, 180, 250])
+	m.c_LN2 = Param(m.N, default=[50, 75, 115, 160, 240])
 #NonNegativeReals
 	#m.z = Var(m.K, m.H, domain=NonNegativeReals, bounds=(0,1))
 	m.z_bar = Var(m.H_bar, domain=Boolean)
