@@ -87,7 +87,7 @@ def run(dataFile, model):
 	    mstDat = pickle.load(fp)
 	#create model object
 	instance = model(AbstractModel()).create_instance({None:mstDat})
-	#instance.dual = Suffix(direction=Suffix.IMPORT)
+	instance.dual = Suffix(direction=Suffix.IMPORT)
 	opt.solve(instance,tee = False).write()	
 	#instance.pprint()
 	return instance
@@ -97,6 +97,9 @@ def saveResult_stagewise(stageFile, instance):
 	for (k,h) in instance.KH:
 		solution[(k,h)]= instance.z[k,h].value
 	print(solution)
+	for index in instance.invLO21:
+		if instance.dual[instance.invLO21[index]]!=0:
+			print(instance.dual[instance.invLO21[index]])
 	with open(stageFile, 'rb') as fp:
 		stageData = pickle.load(fp)[None]
 	for k in range(len(stageData)):
