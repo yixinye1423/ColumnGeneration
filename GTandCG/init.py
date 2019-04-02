@@ -96,14 +96,14 @@ def Init(stageFile, dataFile, parameters,V_LO2, V_LN2, dec_LO2, dec_LN2, pn_LO2,
 	mstDat['KH'] = {None:[val for sublist in list2d for val in sublist]}
 	mstDat['c_hat'] = listCost(cap, hs)
 
-	coeff = [random.uniform(0.9,1.1)]*4
+	#coeff = [random.uniform(0.9,1.1)]*4
 	fInv_LO2 = dict()
 	fInv_LN2 = dict()
 	for k in range(len(hs)):
 		for h in range(len(hs[k])):
 			for n in range(len(V_LO2)):
-				fInv_LO2[(n,k,h)] = coeff[k]*stageData[k][h]['singlepn']['LO2'][n]
-				fInv_LN2[(n,k,h)] = coeff[k]*stageData[k][h]['singlepn']['LN2'][n]
+				fInv_LO2[(n,k,h)] = stageData[k][h]['singlepn']['LO2'][n]
+				fInv_LN2[(n,k,h)] = stageData[k][h]['singlepn']['LN2'][n]
 	mstDat['finv_LO2'] = fInv_LO2
 	mstDat['finv_LN2'] = fInv_LN2
 

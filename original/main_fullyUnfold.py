@@ -186,9 +186,9 @@ dec_LN2 = 60
 
 #First level indices
 mstDat = dict()
-mstDat['K'] = {None:list(range(len(unitNum)))}
+#mstDat['K'] = {None:list(range(len(unitNum)))}
 hlist = [len(powerSet(j)) for j in unitNum]
-mstDat['H'] = {None:list(range(max(hlist)))}
+#mstDat['H'] = {None:list(range(max(hlist)))}
 
 
 mstDat['N'] = {None:list(range(len(V_LO2)))}
@@ -218,8 +218,8 @@ hs = [list(range(len(stageData[k]))) for k in range(len(stageData))]#full
 print(hs)
 list2d = [[(k,h) for h in hs[k]] for k in range(len(hs))]
 
-mstDat['KH'] = {None:[val for sublist in list2d for val in sublist]}
-mstDat['c_hat'] = listCost(cap, hs)
+#mstDat['KH'] = {None:[val for sublist in list2d for val in sublist]}
+c_hat = listCost(cap, hs)
 
 hbars = list(itertools.product(*hs[::-1]))
 #for hbar in range(len(hbars)):
@@ -245,7 +245,9 @@ for comb in itertools.product(*stageData[::-1]):
 c_hat_hbar = list()
 for comb in itertools.product(*hs[::-1]):
 	#print([(len(comb)-1-k,comb[k]) for k in range(len(comb))])
-	c_hat_hbar.append(sum(mstDat['c_hat'][(len(comb)-1-k,comb[k])] for k in range(len(comb))))
+	c_hat_hbar.append(sum(c_hat[(len(comb)-1-k,comb[k])] for k in range(len(comb))))
+mstDat['c_hat'] = dict(zip(list(range(len(c_hat_hbar))), c_hat_hbar))
+
 #print(c_hat_hbar)
 
 fInv_LO21 = dict()
@@ -278,7 +280,6 @@ for h_bar in range(len(fInv1)):
 #plt.plot(list(range(len(forPlot3))), forPlot3)
 
 forPlot5 = list()
-print(forPlot5)
 for n in range(len(V_LO2)):
 	forPlot5.append(list())
 	for h_bar in range(len(fInv1)):
@@ -287,13 +288,13 @@ for n in range(len(V_LO2)):
 	plt.plot(list(range(len(forPlot5[n]))), forPlot5[n], label=str(n))
 	#print(len(forPlot5[n]))
 plt.legend()
-plt.show()
+#plt.show()
 #print(numpy.var(forPlot))
 mstDat['finv_LO2'] = fInv_LO21
 mstDat['finv_LN2'] = fInv_LN21
 
 
 
-with open('data_full_2323.p', 'wb') as fp:
+with open('data_fullyUnfold_2323.p', 'wb') as fp:
     pickle.dump(mstDat, fp, protocol=pickle.HIGHEST_PROTOCOL)
 

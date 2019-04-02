@@ -74,8 +74,12 @@ cap = [[1250,1250,1250],[520,520,520,520],[1000,1000,1000],[150,150,150]]
 
 V_LO2 = [100, 400, 700, 1000, 1500]
 V_LN2 = [100, 400, 700, 1000, 1500]
+c_LO2 = [4*v**0.6 for v in V_LO2]
+c_LN2 = [3.5*v**0.6 for v in V_LN2]
 c_LO2 = [55, 237, 427, 621, 951]
 c_LN2 = [50, 215, 388, 565, 864]
+print(c_LO2)
+print(c_LN2)
 
 pn_LO2 = 2000
 pn_LN2 = 2000
@@ -97,9 +101,9 @@ def saveResult_stagewise(stageFile, instance):
 	for (k,h) in instance.KH:
 		solution[(k,h)]= instance.z[k,h].value
 	print(solution)
-	for index in instance.invLO21:
-		if instance.dual[instance.invLO21[index]]!=0:
-			print(instance.dual[instance.invLO21[index]])
+	#for index in instance.invLO21:
+	#	if instance.dual[instance.invLO21[index]]!=0:
+	#		print(instance.dual[instance.invLO21[index]])
 	with open(stageFile, 'rb') as fp:
 		stageData = pickle.load(fp)[None]
 	for k in range(len(stageData)):
@@ -195,7 +199,6 @@ def procedure():
 opt = SolverFactory('cplex', executable="C:/Program Files/IBM/ILOG/CPLEX_Studio128/cplex/bin/x64_win64/cplex")
 #opt = SolverFactory('cplex', executable="/Applications/CPLEX_Studio128/cplex/bin/x86-64_osx/cplex")
 procedure()
-
 
 #for kh in instance.KH:
 #	print(kh, instance.z[kh].value)

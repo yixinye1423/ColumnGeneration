@@ -162,6 +162,7 @@ def perturb(stageFile, sepDataFile,sysDataFile, candilogFile, V_LO2, V_LN2, dec_
 	#print(sysDat['finv_LO2'])
 	#print(sysDat)
 	print(len(candilog))
+	print(candilog)
 	with open(sysDataFile, 'wb') as fp:
 		pickle.dump(sysDat, fp, protocol=pickle.HIGHEST_PROTOCOL)
 	with open(candilogFile, 'wb') as fp:
