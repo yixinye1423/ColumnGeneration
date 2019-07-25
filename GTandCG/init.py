@@ -21,6 +21,7 @@ def listCost(cap, hs):
 	Cap = dict()
 	for k in range(len(cap)):
 		designs = powerSet(len(cap[k]))
+		#designs = [set(range(m)) for m in range(1,len(cap[k])+1)]
 		if k==1:
 			designs = [Set for Set in designs if len(Set)>=2]
 		for h in hs[k]:

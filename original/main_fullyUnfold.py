@@ -100,8 +100,9 @@ def combine(dist):#calculate fInv_LO2, fInv_LN2
 	#failureInd = sparse.csr_matrix([1-numpy.prod(1-numpy.asarray(tup)) for tup in itertools.product(*fails[::-1])])
 	failureInd = sparse.csr_matrix([1 if sum(tup)==1 else 0 for tup in itertools.product(*fails[::-1]) ])#no multiple failure scenario	
 	EffectiveInd = sparse.csr_matrix([1 if sum(tup)<=1 else 0 for tup in itertools.product(*fails[::-1]) ])#effective scenarios
-	avaiInd = sparse.csr_matrix([1 if sum(tup)==0 else 0 for tup in itertools.product(*fails[::-1]) ])#effective scenarios
+	avaiInd = sparse.csr_matrix([1 if sum(tup)==0 else 0 for tup in itertools.product(*fails[::-1]) ])#available scenarios
 	pi_hat = multiply(pis)
+	print(pi_hat.shape)
 	pi_hat /= EffectiveInd.multiply(pi_hat).sum()
 	diag_hat = add(diags)#full length vector
 	dh_dense = diag_hat.todense().tolist()[0]
@@ -160,20 +161,20 @@ repa = [[5, 2.4, 3, 3.5, 2, 20],#MAC
 [5],#PPF
 [5, 2.4, 3, 3.5, 2, 20],#BAC
 [5]]#LO2 PUMP
-'''
+
 parameters = [{'lambdas':[[0.00018265,0.00027397,0.00010959,0.00054795,0.00018265,0.00010969]
 ,[0.00019265,0.00028397,0.00011959,0.00055795,0.00019265,0.00011969],
 [0.00020265,0.00029397,0.00012959,0.00056795,0.00020265,0.00012969]],
 'mus':[[0.1,0.2,0.143,3,0.5,0.0222],[0.1,0.2,0.143,3,0.5,0.0222],[0.1,0.2,0.143,3,0.5,0.0222]]},#MAC 
-{'lambdas':[[0.00018265],[0.00019265],[0.00020265]],'mus':[[0.2],[0.2],[0.2]]},#PPF
+{'lambdas':[[0.00018265],[0.00019265],[0.00020265],[0.00021265]],'mus':[[0.2],[0.2],[0.2],[0.2]]},#PPF
 {'lambdas':[[0.00018265,0.00027397,0.00010959,0.00054795,0.00018265,0.00010969]
 ,[0.00019265,0.00028397,0.00011959,0.00055795,0.00019265,0.0001196],
 [0.00020265,0.00029397,0.00012959,0.00056795,0.00020265,0.00012969]],
 'mus':[[0.1,0.2,0.143,3,0.5,0.0222],[0.1,0.2,0.143,3,0.5,0.0222],[0.1,0.2,0.143,3,0.5,0.0222]]},#BAC
 {'lambdas':[[0.00054795],[0.00055795],[0.00056795]],'mus':[[2.4],[2.4],[2.4]]}]#LO2 PUMP
-unitNum = [3,3,3,3]
-cap = [[1250,1200,1150],[520,500,480],[1000,950,900],[150,145,140]]
-'''
+unitNum = [3,4,3,3]
+cap = [[1250,1200,1150],[520,500,480,460],[1000,950,900],[150,145,140]]
+
 V_LO2 = [100, 400, 700, 1000, 1500]
 V_LN2 = [100, 400, 700, 1000, 1500]
 c_LO2 = [55, 237, 427, 621, 951]

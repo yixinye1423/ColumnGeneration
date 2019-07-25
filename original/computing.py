@@ -16,7 +16,7 @@ import time
 import json
 import pickle
 
-with open('data_full_3433.p', 'rb') as fp:
+with open('data_forpaper_3433_5.p', 'rb') as fp:
     mstDat = pickle.load(fp)
 
 #create model objects

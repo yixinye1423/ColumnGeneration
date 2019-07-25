@@ -4,11 +4,11 @@ import numpy
 import copy
 options = ['active','standby','being repaired']
 unitNum = [2,3,2,3]
-unitNum = [3,4,3,3]
+unitNum = [4,5,4,4]
 failureModes = [['rotor','bearing','Gearbox','LubeOil','motorBearing','motor'],#MAC
 ['generalFailure'],#PPF
 ['rotor','bearing','Gearbox','LubeOil','motorBearing','motor'],#BAC
-['generalFailure']]#LO2 PUMP
+['generalFailure']]#LOW pump
 #general basic tool (public)
 def printSquareMatrix(mat):
     output = str()      
@@ -347,6 +347,7 @@ def generateTMatrix(k, design, parameter):#for selected design of stage k
 def generatePseudoTMatrix(k, level, parameter):#for stage k, total number of units = level
     numOfUnit = unitNum[k]#total number of potential units
     alters = itertools.combinations(range(numOfUnit), level)#all combinations of this level
+    #alters = [tuple(range(level))]
     matrixList = list()
     stateList = list()
     for alter in alters:
