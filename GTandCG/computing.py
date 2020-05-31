@@ -27,7 +27,7 @@ def run(dataFile, model):
 	#create model object
 	instance = model(AbstractModel()).create_instance({None:mstDat})
 	instance.dual = Suffix(direction=Suffix.IMPORT)
-	opt.solve(instance,tee = False)	
+	opt.solve(instance,tee = True)	
 	#instance.pprint()
 	return instance
 
@@ -110,18 +110,27 @@ def isConverged(stageFile, instance):
 				if stageData[k][h]['selected'] == False:
 					return False
 	return True
-				
+'''				
 def peel(rawDataFile):
 	with open(rawDataFile, 'rb') as fp:
 	    rawData = pickle.load(fp)
+	    print(rawData)
+	print(tuple([rawData[key] for key in rawData]))
 	return tuple([rawData[key] for key in rawData])
-
+'''
 def procedure(rawDataFile):
 	open('stageData.p','w')
 	open('data_sep.p','w')
 	open('data_sys.p','w')
 	open('candilog.p','w')
-	parameters,V_LO2, V_LN2, dec_LO2, dec_LN2, pn_LO2, pn_LN2, c_LO2, c_LN2, cap = peel(rawDataFile)
+	with open(rawDataFile, 'rb') as fp:
+	    rawData = pickle.load(fp)
+	parameters = rawData['parameters']
+	V_LO2, V_LN2 = rawData['V_LO2'], rawData['V_LN2']
+	dec_LO2, dec_LN2 = rawData['dec_LO2'], rawData['dec_LN2']
+	pn_LO2, pn_LN2 = rawData['pn_LO2'], rawData['pn_LN2']
+	c_LO2, c_LN2 = rawData['c_LO2'], rawData['c_LN2']
+	cap = rawData['cap']
 	Init('stageData.p','data_sep.p', parameters,V_LO2, V_LN2, dec_LO2, dec_LN2, pn_LO2, pn_LN2, c_LO2, c_LN2, cap)
 	instance = run('data_sep.p',MP_Indep)
 	saveResult_stagewise('stageData.p',instance)
@@ -140,9 +149,10 @@ def procedure(rawDataFile):
 
  
 
-opt = SolverFactory('cplex', executable="C:/Program Files/IBM/ILOG/CPLEX_Studio128/cplex/bin/x64_win64/cplex")
-#opt = SolverFactory('cplex', executable="/Applications/CPLEX_Studio128/cplex/bin/x86-64_osx/cplex")
-procedure('rawData_4544_1.p')
+#opt = SolverFactory('cplex', executable="C:/Program Files/IBM/ILOG/CPLEX_Studio128/cplex/bin/x64_win64/cplex")
+opt = SolverFactory('cplex', executable="/Applications/CPLEX_Studio128/cplex/bin/x86-64_osx/cplex")
+opt.options['mipgap']=0
+procedure('rawData_3433_5.p')
 
 #for kh in instance.KH:
 #	print(kh, instance.z[kh].value)

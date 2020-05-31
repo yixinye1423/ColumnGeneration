@@ -90,7 +90,7 @@ def perturb(stageFile, sepDataFile,sysDataFile, candilogFile, V_LO2, V_LN2, dec_
 		with open(candilogFile, 'rb') as fp:
 			oldCandilog = pickle.load(fp)[None]
 		toRemove = oldCandilog.index(zkh)
-		print(toRemove)
+		print('toRemove:',toRemove)
 		#print(sysDat['H_bar'])
 		sysDat['c_hat'].pop(toRemove, None)
 		sysDat['H_bar'][None].remove(toRemove)

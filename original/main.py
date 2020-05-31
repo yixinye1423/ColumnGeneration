@@ -148,13 +148,15 @@ pn_LN2 = 2000
 dec_LO2 = 48
 dec_LN2 = 60
 '''
-
-def peel(rawDataFile):
-	with open(rawDataFile, 'rb') as fp:
-	    rawData = pickle.load(fp)
-	return tuple([rawData[key] for key in rawData])
-
-parameters,V_LO2, V_LN2, dec_LO2, dec_LN2, pn_LO2, pn_LN2, c_LO2, c_LN2, cap = peel('rawData_4544_1.p')
+rawDataFile = 'rawData_3433_5.p'
+with open(rawDataFile, 'rb') as fp:
+    rawData = pickle.load(fp)
+parameters = rawData['parameters']
+V_LO2, V_LN2 = rawData['V_LO2'], rawData['V_LN2']
+dec_LO2, dec_LN2 = rawData['dec_LO2'], rawData['dec_LN2']
+pn_LO2, pn_LN2 = rawData['pn_LO2'], rawData['pn_LN2']
+c_LO2, c_LN2 = rawData['c_LO2'], rawData['c_LN2']
+cap = rawData['cap']
 #print(parameters)
 mstDat = dict()
 mstDat['K'] = {None:list(range(len(unitNum)))}
@@ -215,6 +217,6 @@ mstDat['finv_LN2'] = fInv_LN2
 
 
 
-with open('data_forpaper_4544_1.p', 'wb') as fp:
+with open('data_forpaper_3433_5.p', 'wb') as fp:
     pickle.dump(mstDat, fp, protocol=pickle.HIGHEST_PROTOCOL)
 

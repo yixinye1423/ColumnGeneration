@@ -23,8 +23,8 @@ with open('data_forpaper_3433_5.p', 'rb') as fp:
 Master = MP(AbstractModel())
 instance = Master.create_instance({None:mstDat})
 instance.dual = Suffix(direction=Suffix.IMPORT)
-opt = SolverFactory('cplex', executable="C:/Program Files/IBM/ILOG/CPLEX_Studio128/cplex/bin/x64_win64/cplex")
-#opt = SolverFactory('cplex', executable="/Applications/CPLEX_Studio128/cplex/bin/x86-64_osx/cplex")
+#opt = SolverFactory('cplex', executable="C:/Program Files/IBM/ILOG/CPLEX_Studio128/cplex/bin/x64_win64/cplex")
+opt = SolverFactory('cplex', executable="/Applications/CPLEX_Studio128/cplex/bin/x86-64_osx/cplex")
 
 opt.solve(instance,tee = True).write()	
 

@@ -77,7 +77,6 @@ def Init(stageFile, dataFile, parameters,V_LO2, V_LN2, dec_LO2, dec_LN2, pn_LO2,
 	mstDat['K'] = {None:list(range(len(unitNum)))}
 	hlist = [len(powerSet(j)) for j in unitNum]
 	mstDat['H'] = {None:list(range(max(hlist)))}
-
 	mstDat['N'] = {None:list(range(len(V_LO2)))}
 	mstDat['c_LO2'] = {n: c_LO2[n] for n in range(len(c_LO2))}
 	mstDat['c_LN2'] = {n: c_LN2[n] for n in range(len(c_LN2))}
@@ -113,3 +112,6 @@ def Init(stageFile, dataFile, parameters,V_LO2, V_LN2, dec_LO2, dec_LN2, pn_LO2,
 
 	with open(dataFile, 'wb') as fp:
 	    pickle.dump(mstDat, fp, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+
